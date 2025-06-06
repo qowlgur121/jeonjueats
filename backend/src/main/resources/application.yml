@@ -49,6 +49,18 @@ jwt:
   secret: jeonjueats-secret-key-for-development-only-change-in-production
   expiration: 86400000  # 24시간 (밀리초)
 
+# Springdoc OpenAPI 설정 (Swagger UI)
+springdoc:
+  api-docs:
+    path: /api-docs  # OpenAPI JSON 문서 경로
+  swagger-ui:
+    path: /swagger-ui.html  # Swagger UI 접속 경로
+    tags-sorter: alpha      # 태그를 알파벳 순으로 정렬
+    operations-sorter: alpha  # API 메서드를 알파벳 순으로 정렬
+    disable-swagger-default-url: true  # 기본 URL 비활성화
+    display-request-duration: true     # 요청 소요 시간 표시
+  show-actuator: false      # Actuator 엔드포인트 숨김
+
 # 파일 업로드 저장 경로
 file:
   upload-dir: ./uploads/
