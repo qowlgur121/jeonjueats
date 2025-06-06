@@ -9,12 +9,12 @@ spring:
   profiles:
     active: dev
   
-  # H2 데이터베이스 설정 (개발용)
+  # MySQL 데이터베이스 설정 (개발용) - H2에서 MySQL로 변경
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/jeonjueats?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
   
   # H2 콘솔 설정 (웹에서 데이터베이스 확인 가능)
   h2:
@@ -24,12 +24,13 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: create-drop  # 개발 초기에는 create-drop
+      ddl-auto: create-drop  # 개발 초기에는 create-drop으로 스키마 자동 생성
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQL8Dialect  # MySQL 8 Dialect 사용
         format_sql: true
+        globally_quoted_identifiers: true  # 테이블/컬럼명에 백틱 자동 추가
     defer-datasource-initialization: true
   
   # 파일 업로드 설정
