@@ -50,3 +50,6 @@ config.json
 # Personal environment files
 .env.example
 
+# 각 모듈별 .gitignore에서 해당 기술 스택 관련 파일들을 관리
+# 루트에서는 프로젝트 전체적인 공통 사항만 관리
+
