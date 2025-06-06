@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 전주잇츠 커스텀 스타일 */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 라이트 모드 */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+}
+
+/* 요기요 스타일 커스텀 컴포넌트 */
+.btn-primary {
+  @apply bg-primary-500 hover:bg-primary-600 text-white 
+         font-medium py-3 px-6 rounded-lg transition-all
+         shadow-md hover:shadow-lg;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-800 
+         font-medium py-3 px-6 rounded-lg transition-all;
+}
+
+/* 카드 스타일 */
+.card-base {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100
+         hover:shadow-md transition-shadow;
+}
+
+.store-card {
+  @apply card-base p-4 space-y-3;
+}
+
+.menu-card {
+  @apply card-base overflow-hidden;
+}
+
+/* 그리드 시스템 */
+.category-grid {
+  @apply grid grid-cols-5 gap-4 p-4;
+}
+
+.store-grid {
+  @apply grid grid-cols-1 gap-4 p-4;
+}
+
+/* 이미지 스타일 */
+.store-image {
+  @apply w-full h-32 object-cover rounded-lg;
+}
+
+.menu-image {
+  @apply w-20 h-20 object-cover rounded-lg;
+}
+
+/* 타이포그래피 */
+.heading-xl { @apply text-2xl font-bold text-gray-900; }
+.heading-lg { @apply text-xl font-semibold text-gray-900; }
+.heading-md { @apply text-lg font-medium text-gray-900; }
+
+.body-lg { @apply text-base text-gray-700; }
+.body-md { @apply text-sm text-gray-600; }
+.body-sm { @apply text-xs text-gray-500; }
+
+.price-text { @apply text-lg font-bold text-gray-900; }

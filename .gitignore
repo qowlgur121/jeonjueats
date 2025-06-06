@@ -24,10 +24,14 @@ node_modules/
 # OS specific
 .DS_Store
 
+# Project documentation (until completion)
+README.md
+
 # Task Master related files
 tasks.json
 tasks/ 
 .taskmaster
+memory-bank/
 
 # Scripts and project planning files
 scripts/
