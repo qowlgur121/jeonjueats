@@ -2,6 +2,11 @@ package com.jeonjueats.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 /**
  * 사용자 엔티티 (PRD 4.2.1 user 테이블 명세)
@@ -14,13 +19,14 @@ import lombok.*;
            @Index(name = "idx_user_email", columnList = "email"),
            @Index(name = "idx_user_nickname", columnList = "nickname")
        })
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString(exclude = "password") // 비밀번호는 toString에서 제외
-public class User extends BaseTimeEntity {
+public class User {
     
     /**
      * 사용자 고유 식별자
@@ -100,5 +106,19 @@ public class User extends BaseTimeEntity {
     /**
      * 마지막 로그인 시간 (MVP 이후 기능)
      */
-    private java.time.LocalDateTime lastLoggedInAt;
+    private LocalDateTime lastLoggedInAt;
+    
+    /**
+     * 계정 생성 일시 
+     */
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    /**
+     * 정보 수정 일시
+     */
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 } 

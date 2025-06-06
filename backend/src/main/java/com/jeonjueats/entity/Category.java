@@ -2,6 +2,11 @@ package com.jeonjueats.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 /**
  * 음식 카테고리 엔티티 (PRD 4.2.2 category 테이블 명세)
@@ -11,13 +16,14 @@ import lombok.*;
  */
 @Entity
 @Table(name = "category")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class Category extends BaseTimeEntity {
+public class Category {
     
     /**
      * 카테고리 고유 식별자
@@ -44,4 +50,18 @@ public class Category extends BaseTimeEntity {
     @Column(nullable = false)
     @Builder.Default
     private Integer sortOrder = 0;
+    
+    /**
+     * 생성 일시 (PRD 4.2.2 명세)
+     */
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    
+    /**
+     * 수정 일시 (PRD 4.2.2 명세)
+     */
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 } 
