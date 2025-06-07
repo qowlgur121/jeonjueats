@@ -5,11 +5,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
  * JPA Auditing 설정
- * - @CreatedDate, @LastModifiedDate 어노테이션을 사용하여 
- *   엔티티의 생성시간, 수정시간을 자동으로 관리
+ * 엔티티의 생성시간, 수정시간을 자동으로 관리하기 위한 설정
  */
 @Configuration
 @EnableJpaAuditing
-public class JpaAuditingConfig {
-    // JPA Auditing 활성화를 위한 설정 클래스
+public class JpaConfig {
+    // JPA Auditing 기능을 활성화하는 설정 클래스
 } 

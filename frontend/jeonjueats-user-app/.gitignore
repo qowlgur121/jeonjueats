@@ -28,17 +28,3 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
-# 환경 변수 파일
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# 패키지 매니저 캐시
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*

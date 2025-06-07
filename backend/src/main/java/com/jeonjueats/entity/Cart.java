@@ -30,7 +30,7 @@ public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_id")
-    private Long cartId;
+    private Long id;
 
     /**
      * MVP 핵심 필드들

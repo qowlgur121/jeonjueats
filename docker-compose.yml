@@ -1,0 +1,81 @@
+services:
+  # MySQL 데이터베이스
+  db:
+    image: mysql:8.0
+    container_name: jeonjueats-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: jeonjueats
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0 --skip-host-cache --skip-name-resolve
+    networks:
+      - jeonjueats-network
+
+  # Spring Boot 백엔드
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jeonjueats-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: jeonjueats
+      DB_USERNAME: root
+      DB_PASSWORD: 1234
+      JWT_SECRET: jeonjueats-secret-key-for-development-only-not-for-production
+    volumes:
+      - ./backend:/app
+      - gradle_cache:/root/.gradle
+    networks:
+      - jeonjueats-network
+    restart: unless-stopped
+
+  # 고객용 Vue.js 프론트엔드
+  frontend-user:
+    build:
+      context: ./frontend/jeonjueats-user-app
+      dockerfile: Dockerfile
+    container_name: jeonjueats-frontend-user
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - jeonjueats-network
+    restart: unless-stopped
+
+  # 사장님용 Vue.js 프론트엔드
+  frontend-owner:
+    build:
+      context: ./frontend/jeonjueats-owner-app
+      dockerfile: Dockerfile
+    container_name: jeonjueats-frontend-owner
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - jeonjueats-network
+    restart: unless-stopped
+
+# 볼륨 설정
+volumes:
+  mysql_data:
+    driver: local
+  gradle_cache:
+    driver: local
+
+# 네트워크 설정
+networks:
+  jeonjueats-network:
+    driver: bridge 

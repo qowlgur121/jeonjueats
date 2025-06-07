@@ -35,31 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### 환경 변수 및 설정 파일 ###
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-application-*.yml
-!application.yml
-!application-*.yml.example
-
-### 로그 파일 ###
-logs/
-*.log
-spring.log
-
-### JAR/WAR 파일 ###
-*.jar
-*.war
-!gradle/wrapper/gradle-wrapper.jar
-
-### 업로드된 파일들 ###
-uploads/
-images/
-
-### 기타 ###
-.DS_Store
-Thumbs.db

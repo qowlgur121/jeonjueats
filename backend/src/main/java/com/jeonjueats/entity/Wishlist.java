@@ -34,7 +34,7 @@ public class Wishlist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wishlist_id")
-    private Long wishlistId;
+    private Long id;
 
     /**
      * MVP 핵심 필드들

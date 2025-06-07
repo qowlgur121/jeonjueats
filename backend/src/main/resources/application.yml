@@ -1,105 +1,58 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: jeonjueats-backend
   
-  # 기본 프로필을 dev로 설정 (개발용)
-  profiles:
-    active: dev
-  
-  # MySQL 데이터베이스 설정 (개발용) - H2에서 MySQL로 변경
+  # 데이터베이스 연결 설정
   datasource:
-    url: jdbc:mysql://localhost:3306/jeonjueats?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true
+    url: jdbc:mysql://db:3306/jeonjueats?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   
-  # H2 콘솔 설정 (웹에서 데이터베이스 확인 가능)
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  
+  # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: create-drop  # 개발 초기에는 create-drop으로 스키마 자동 생성
-    show-sql: true
+      ddl-auto: update  # 개발 시에는 update, 운영에서는 validate 사용
+    show-sql: true     # SQL 쿼리 로그 출력
+    format-sql: true   # SQL 쿼리 포맷팅
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect  # MySQL 8 Dialect 사용
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-        globally_quoted_identifiers: true  # 테이블/컬럼명에 백틱 자동 추가
-    defer-datasource-initialization: true
+    open-in-view: false  # OSIV 비활성화 (성능 최적화)
   
-  # 파일 업로드 설정
-  servlet:
-    multipart:
-      max-file-size: 5MB      # 파일 하나당 최대 5MB
-      max-request-size: 10MB  # 전체 요청 최대 10MB
-  
-  # 시큐리티 기본 설정 (나중에 JWT로 대체)
+  # 보안 설정 (임시로 비활성화)
   security:
     user:
       name: admin
       password: admin123
 
-# JWT 설정
-jwt:
-  secret: jeonjueats-secret-key-for-development-only-change-in-production
-  expiration: 86400000  # 24시간 (밀리초)
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
-# Springdoc OpenAPI 설정 (Swagger UI)
-springdoc:
-  api-docs:
-    path: /api-docs  # OpenAPI JSON 문서 경로
-  swagger-ui:
-    path: /swagger-ui.html  # Swagger UI 접속 경로
-    tags-sorter: alpha      # 태그를 알파벳 순으로 정렬
-    operations-sorter: alpha  # API 메서드를 알파벳 순으로 정렬
-    disable-swagger-default-url: true  # 기본 URL 비활성화
-    display-request-duration: true     # 요청 소요 시간 표시
-  show-actuator: false      # Actuator 엔드포인트 숨김
-
-# 파일 업로드 저장 경로
-file:
-  upload-dir: ./uploads/
-
-# 로깅 설정
+# 로그 설정
 logging:
   level:
     com.jeonjueats: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.type: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
----
-# 운영 환경 설정 (나중에 사용)
-spring:
-  config:
-    activate:
-      on-profile: prod
-  
-  datasource:
-    url: jdbc:mysql://localhost:3306/jeonjueats?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-    username: root
-    password: your_password_here
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  
-  h2:
-    console:
-      enabled: false  # 운영에서는 H2 콘솔 비활성화
-  
-  jpa:
-    hibernate:
-      ddl-auto: validate  # 운영에서는 validate 사용
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-
-logging:
-  level:
-    com.jeonjueats: INFO
-    org.springframework.security: WARN
+# Actuator 설정 (모니터링)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,beans
+  endpoint:
+    health:
+      show-details: always 
