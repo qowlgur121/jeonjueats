@@ -56,3 +56,8 @@ management:
   endpoint:
     health:
       show-details: always 
+
+# JWT 설정
+jwt:
+  secret-key: "jeonjueats-secret-key-for-jwt-token-generation-and-validation-must-be-at-least-256-bits"
+  expiration-time: 86400000  # 24시간 (밀리초 단위) 
