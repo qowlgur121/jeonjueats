@@ -1,7 +1,6 @@
 package com.jeonjueats.service;
 
 import com.jeonjueats.dto.OrderCreateRequestDto;
-import com.jeonjueats.dto.OrderItemResponseDto;
 import com.jeonjueats.dto.OrderListResponseDto;
 import com.jeonjueats.dto.OrderResponseDto;
 import com.jeonjueats.entity.*;
