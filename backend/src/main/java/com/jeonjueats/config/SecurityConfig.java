@@ -115,6 +115,9 @@ public class SecurityConfig {
                 // 사장님 전용 API (ROLE_OWNER 권한 필요)
                 .requestMatchers("/api/owner/**").hasRole("OWNER")
                 
+                // 사용자 인증이 필요한 API
+                .requestMatchers("/api/carts/**", "/api/orders/**").authenticated()
+                
                 // 그 외 모든 /api/** 경로는 인증 필요
                 .requestMatchers("/api/**").authenticated()
                 
