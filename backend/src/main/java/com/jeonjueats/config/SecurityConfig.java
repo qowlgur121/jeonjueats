@@ -103,7 +103,7 @@ public class SecurityConfig {
                     "/api/auth/**",           // 회원가입, 로그인 API
                     "/api/categories",        // 카테고리 목록 조회
                     "/api/stores/**",         // 가게 목록/상세 조회 (일반 사용자용)
-                    "/api/search",            // 검색 API
+                    "/api/search/**",         // 검색 API
                     "/swagger-ui/**",         // Swagger UI
                     "/v3/api-docs/**",        // API 문서
                     "/api-docs/**",           // API 문서

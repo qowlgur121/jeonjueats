@@ -65,6 +65,18 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     Page<Store> findByStoreOrMenuNameContaining(@Param("keyword") String keyword, Pageable pageable);
 
     /**
+     * 통합 검색: 매장명 + 메뉴명 (OPEN 상태만, 페이징)
+     * 가게 또는 메뉴 검색 - 영업 중인 가게만
+     */
+    @Query("SELECT DISTINCT s FROM Store s WHERE s.isDeleted = false AND s.status = :status AND " +
+           "(s.name LIKE %:keyword% OR s.id IN " +
+           "(SELECT m.storeId FROM Menu m WHERE m.name LIKE %:keyword% AND m.isDeleted = false)) " +
+           "ORDER BY s.createdAt DESC")
+    Page<Store> findByStoreOrMenuNameContainingAndStatus(@Param("keyword") String keyword, 
+                                                         @Param("status") StoreStatus status, 
+                                                         Pageable pageable);
+
+    /**
      * 매장 ID 목록으로 매장 조회 (페이징)
      * 검색 결과용
      */

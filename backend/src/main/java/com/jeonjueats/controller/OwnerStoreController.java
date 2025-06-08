@@ -57,7 +57,7 @@ public class OwnerStoreController {
 
     /**
      * 내 가게 목록 조회
-     * 현재 로그인한 사장님이 소유한 가게 목록을 페이징 처리하여 조회합니다.
+     * 현재 로그인한 사장님이 소유한 가게 목록을 페이징 처리하여 조회
      * 
      * @param pageable 페이징 정보 (기본: 페이지 0, 사이즈 10, createdAt 내림차순)
      * @param request HTTP 요청 (JWT 토큰 추출용)
@@ -81,7 +81,7 @@ public class OwnerStoreController {
 
     /**
      * 내 가게 상세 정보 조회
-     * 현재 로그인한 사장님이 소유한 특정 가게의 상세 정보를 조회합니다.
+     * 현재 로그인한 사장님이 소유한 특정 가게의 상세 정보를 조회
      * 
      * @param storeId 조회할 가게 ID
      * @param request HTTP 요청 (JWT 토큰 추출용)
@@ -104,7 +104,7 @@ public class OwnerStoreController {
 
     /**
      * 내 가게 정보 수정
-     * 현재 로그인한 사장님이 소유한 가게의 정보를 수정합니다.
+     * 현재 로그인한 사장님이 소유한 가게의 정보를 수정
      * 요청 본문에 포함된 필드만 업데이트됩니다.
      * 
      * @param storeId 수정할 가게 ID
@@ -130,7 +130,7 @@ public class OwnerStoreController {
 
     /**
      * 내 가게 운영 상태 변경 (토글)
-     * 현재 로그인한 사장님이 소유한 가게의 운영 상태를 OPEN ↔ CLOSED로 변경합니다.
+     * 현재 로그인한 사장님이 소유한 가게의 운영 상태를 OPEN ↔ CLOSED로 변경
      * 
      * @param storeId 상태를 변경할 가게 ID
      * @param request HTTP 요청 (JWT 토큰 추출용)
@@ -154,7 +154,7 @@ public class OwnerStoreController {
 
     /**
      * JWT 토큰에서 현재 사용자 ID 추출
-     * Authorization 헤더의 Bearer 토큰을 파싱하여 사용자 ID를 반환합니다.
+     * Authorization 헤더의 Bearer 토큰을 파싱하여 사용자 ID를 반환
      * 
      * @param request HTTP 요청
      * @return 현재 로그인한 사용자의 ID
