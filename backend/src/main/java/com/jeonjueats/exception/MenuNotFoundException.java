@@ -14,6 +14,10 @@ public class MenuNotFoundException extends RuntimeException {
         super(message);
     }
     
+    public MenuNotFoundException(Long menuId) {
+        super("메뉴 ID " + menuId + "를 찾을 수 없습니다.");
+    }
+    
     public MenuNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }

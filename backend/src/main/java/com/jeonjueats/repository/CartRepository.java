@@ -15,25 +15,31 @@ import java.util.Optional;
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
     /**
-     * 사용자 ID로 장바구니 조회
-     * 가장 중요한 메서드: 로그인한 사용자의 장바구니 찾기
+     * 사용자별 장바구니 조회
+     * 한 사용자당 하나의 장바구니만 존재 (unique 제약)
      */
     Optional<Cart> findByUserId(Long userId);
 
     /**
-     * 사용자의 장바구니 존재 여부 확인
-     * 회원가입 시 장바구니 생성 체크용
+     * 사용자별 장바구니 존재 확인
      */
     boolean existsByUserId(Long userId);
 
     /**
-     * 특정 매장의 장바구니만 조회
-     * MVP: 한 번에 한 매장 메뉴만 담기 가능하므로 사용
+     * 특정 가게의 장바구니 수 조회
+     * 통계용으로 활용 가능
      */
-    Optional<Cart> findByUserIdAndStoreId(Long userId, Long storeId);
+    long countByStoreId(Long storeId);
 
     /**
-     * 사용자의 장바구니 삭제 (사용자 탈퇴 시)
+     * 빈 장바구니 조회 (storeId가 null인 경우)
+     * 정리 작업용
+     */
+    long countByStoreIdIsNull();
+
+    /**
+     * 사용자의 장바구니 삭제
+     * 사용자 탈퇴 시 사용
      */
     void deleteByUserId(Long userId);
 } 

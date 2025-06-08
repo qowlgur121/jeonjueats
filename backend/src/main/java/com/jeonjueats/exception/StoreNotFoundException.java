@@ -9,6 +9,10 @@ public class StoreNotFoundException extends RuntimeException {
         super(message);
     }
     
+    public StoreNotFoundException(Long storeId) {
+        super("가게 ID " + storeId + "를 찾을 수 없습니다.");
+    }
+    
     public StoreNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }

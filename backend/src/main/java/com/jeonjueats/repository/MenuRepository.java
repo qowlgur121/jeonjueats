@@ -71,4 +71,10 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
      * 매장별 판매 가능한 메뉴 개수 조회
      */
     long countByStoreIdAndStatusAndIsDeletedFalse(Long storeId, MenuStatus status);
+
+    /**
+     * 메뉴 ID로 메뉴 조회 (논리적 삭제 제외)
+     * 장바구니에 메뉴 추가 시 메뉴 존재 확인용
+     */
+    Optional<Menu> findByIdAndIsDeletedFalse(Long menuId);
 } 
