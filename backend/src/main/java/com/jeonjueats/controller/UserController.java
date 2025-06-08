@@ -1,23 +1,25 @@
 package com.jeonjueats.controller;
 
 import com.jeonjueats.dto.UserProfileDto;
-import com.jeonjueats.entity.User;
-import com.jeonjueats.repository.UserRepository;
+import com.jeonjueats.dto.UserProfileUpdateRequestDto;
+import com.jeonjueats.security.JwtUtil;
+import com.jeonjueats.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 사용자 관련 API 컨트롤러
- * JWT 인증이 필요한 사용자 정보 조회 API 제공
+ * JWT 인증이 필요한 사용자 정보 조회 및 수정 API 제공
  */
 @Slf4j
 @RestController
@@ -25,7 +27,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     /**
      * 현재 로그인한 사용자의 프로필 정보 조회
@@ -34,42 +37,96 @@ public class UserController {
      * @return 사용자 프로필 정보
      */
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUserProfile() {
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> getMyProfile(HttpServletRequest request) {
         try {
-            // 1. Spring Security 컨텍스트에서 인증 정보 획득
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
-            if (authentication == null || !authentication.isAuthenticated()) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("code", "UNAUTHORIZED");
-                errorResponse.put("message", "인증되지 않은 사용자입니다.");
-                return ResponseEntity.status(401).body(errorResponse);
-            }
+            // JWT에서 사용자 ID 추출
+            String token = jwtUtil.resolveToken(request);
+            Long userId = jwtUtil.getUserIdFromToken(token);
 
-            // 2. 인증된 사용자의 이메일 (principal)로 사용자 조회
-            String email = (String) authentication.getPrincipal();
-            log.info("현재 인증된 사용자 프로필 조회: email={}", email);
+            log.info("현재 인증된 사용자 프로필 조회 요청: userId={}", userId);
 
-            // 3. 데이터베이스에서 사용자 정보 조회
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-
-            // 4. DTO로 변환하여 응답
-            UserProfileDto profileDto = UserProfileDto.of(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getNickname(),
-                    user.getRole().name()
-            );
+            // 서비스에서 사용자 정보 조회
+            UserProfileDto profileDto = userService.getMyProfile(userId);
 
             return ResponseEntity.ok(profileDto);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("사용자 프로필 조회 중 오류 발생: {}", e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("code", "INTERNAL_SERVER_ERROR");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    /**
+     * 현재 로그인한 사용자의 프로필 정보 수정
+     * 닉네임과 기본 배달 주소 수정 가능
+     *
+     * @param requestDto 수정할 프로필 정보
+     * @param bindingResult 유효성 검사 결과
+     * @param request HTTP 요청 객체
+     * @return 업데이트된 사용자 프로필 정보
+     */
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> updateMyProfile(
+            @Valid @RequestBody UserProfileUpdateRequestDto requestDto,
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+
+        log.info("사용자 프로필 수정 API 호출 - 닉네임: {}, 우편번호: {}", requestDto.getNickname(), requestDto.getDefaultZipcode());
+
+        // 1. 유효성 검사 오류 처리
+        if (bindingResult.hasErrors()) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("code", "INVALID_INPUT_VALUE");
+            errorResponse.put("message", "입력값이 올바르지 않습니다.");
+            Map<String, String> fieldErrors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    fieldErrors.put(error.getField(), error.getDefaultMessage())
+            );
+            errorResponse.put("errors", fieldErrors);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+
+        try {
+            // JWT에서 사용자 ID 추출
+            String token = jwtUtil.resolveToken(request);
+            Long userId = jwtUtil.getUserIdFromToken(token);
+
+            // 서비스에서 프로필 수정 처리
+            UserProfileDto updatedProfile = userService.updateMyProfile(
+                    userId,
+                    requestDto.getNickname(),
+                    requestDto.getDefaultZipcode(),
+                    requestDto.getDefaultAddress1(),
+                    requestDto.getDefaultAddress2()
+            );
+
+            log.info("사용자 프로필 수정 완료 - userId: {}", userId);
+            return ResponseEntity.ok(updatedProfile);
+
+        } catch (IllegalArgumentException e) {
+            // 닉네임 중복 등 비즈니스 로직 오류 처리
+            log.warn("사용자 프로필 수정 실패: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            if (e.getMessage().contains("NICKNAME_ALREADY_EXISTS")) {
+                errorResponse.put("code", "NICKNAME_ALREADY_EXISTS");
+                errorResponse.put("message", "이미 사용 중인 닉네임입니다.");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            } else {
+                errorResponse.put("code", "BAD_REQUEST");
+                errorResponse.put("message", e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+        } catch (Exception e) {
+            log.error("사용자 프로필 수정 중 예상치 못한 오류 발생: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("code", "INTERNAL_SERVER_ERROR");
             errorResponse.put("message", "서버 내부 오류가 발생했습니다.");
-            return ResponseEntity.status(500).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 } 
