@@ -47,6 +47,21 @@ scripts/
 .roomodes
 config.json
 
+# Claude AI generated documentation files
+CLAUDE.md
+CURRENT_STATUS.md
+NEXT_SESSION_GUIDE.md
+*_GUIDE.md
+*_STATUS.md
+NEXT_SESSION_*.md
+NEXT_PROJECT_*.md
+PROJECT_*.md
+CURRENT_*.md
+
+# Notes and documentation folders
+notes/
+docs/
+
 # Personal environment files
 .env.example
 
