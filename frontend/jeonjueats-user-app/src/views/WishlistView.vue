@@ -1,44 +1,97 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getWishlists, toggleWishlist, type WishlistResponseDto } from '../api/wishlist'
 
-const wishlistItems = ref([
-  {
-    id: 1,
-    storeName: '전주비빔밥 본점',
-    category: '한식',
-    rating: 4.8,
-    deliveryTime: '25-35분',
-    deliveryFee: 2000,
-    imageUrl: '🍚',
-    description: '정통 전주비빔밥의 원조 맛집',
-    addedDate: '2024-01-15'
-  },
-  {
-    id: 2,
-    storeName: '한옥마을 치킨',
-    category: '치킨',
-    rating: 4.7,
-    deliveryTime: '20-30분',
-    deliveryFee: 2500,
-    imageUrl: '🍗',
-    description: '바삭한 치킨의 명가',
-    addedDate: '2024-01-12'
-  },
-  {
-    id: 3,
-    storeName: '전주 막걸리집',
-    category: '주점',
-    rating: 4.6,
-    deliveryTime: '30-40분',
-    deliveryFee: 3000,
-    imageUrl: '🍶',
-    description: '정통 전주 막걸리와 안주',
-    addedDate: '2024-01-10'
+const router = useRouter()
+
+const wishlistItems = ref<WishlistResponseDto[]>([])
+const filteredItems = ref<WishlistResponseDto[]>([])
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const sortBy = ref('latest')
+
+// 컴포넌트 마운트 시 찜 목록 로드
+onMounted(async () => {
+  await loadWishlists()
+})
+
+// 찜 목록 로드
+const loadWishlists = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    const response = await getWishlists()
+    wishlistItems.value = response.content
+    applySort()
+    
+  } catch (err) {
+    console.error('찜 목록 로드 실패:', err)
+    error.value = '찜 목록을 불러오는데 실패했습니다.'
+  } finally {
+    isLoading.value = false
   }
-])
+}
 
-const removeFromWishlist = (storeId: number) => {
-  wishlistItems.value = wishlistItems.value.filter(item => item.id !== storeId)
+// 정렬 적용
+const applySort = () => {
+  let sorted = [...wishlistItems.value]
+  
+  switch (sortBy.value) {
+    case 'latest':
+      sorted.sort((a, b) => new Date(b.wishedAt).getTime() - new Date(a.wishedAt).getTime())
+      break
+    case 'name':
+      sorted.sort((a, b) => a.store.storeName.localeCompare(b.store.storeName))
+      break
+    case 'rating':
+      // 평점 정보가 없으므로 이름순으로 대체
+      sorted.sort((a, b) => a.store.storeName.localeCompare(b.store.storeName))
+      break
+  }
+  
+  filteredItems.value = sorted
+}
+
+// 정렬 옵션 변경 감지
+watch(sortBy, () => {
+  applySort()
+})
+
+// 찜 해제
+const removeFromWishlist = async (storeId: number) => {
+  try {
+    console.log('찜 해제 시작:', storeId)
+    const response = await toggleWishlist(storeId)
+    
+    if (!response.wished) {
+      // 찜 목록에서 제거
+      const removedItem = wishlistItems.value.find(item => item.store.storeId === storeId)
+      wishlistItems.value = wishlistItems.value.filter(item => item.store.storeId !== storeId)
+      applySort()
+      console.log('찜 해제 완료:', removedItem?.store.storeName || '가게')
+    }
+    
+  } catch (err) {
+    console.error('찜 해제 실패:', err)
+    alert('찜 해제에 실패했습니다.')
+  }
+}
+
+// 주문하기 (가게 상세 페이지로 이동)
+const goToStore = (storeId: number) => {
+  router.push(`/stores/${storeId}`)
+}
+
+// 날짜 포맷팅
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}`
 }
 </script>
 
@@ -59,8 +112,20 @@ const removeFromWishlist = (storeId: number) => {
     <!-- 찜 목록 컨텐츠 -->
     <div class="wishlist-content">
       
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">찜 목록을 불러오는 중...</p>
+      </div>
+      
+      <!-- 에러 상태 -->
+      <div v-else-if="error" class="error-container">
+        <p class="error-text">{{ error }}</p>
+        <button @click="loadWishlists" class="retry-btn">다시 시도</button>
+      </div>
+      
       <!-- 찜 목록이 있을 때 -->
-      <section v-if="wishlistItems.length > 0" class="stores-section">
+      <section v-else-if="wishlistItems.length > 0" class="stores-section">
         <div class="section-container">
           
           <!-- 통계 정보 -->
@@ -68,25 +133,32 @@ const removeFromWishlist = (storeId: number) => {
             <h2 class="stats-title">
               총 <span class="stats-number">{{ wishlistItems.length }}개</span> 매장
             </h2>
-            <select class="sort-select">
-              <option>최신순</option>
-              <option>이름순</option>
-              <option>평점순</option>
+            <select v-model="sortBy" class="sort-select">
+              <option value="latest">최신순</option>
+              <option value="name">이름순</option>
+              <option value="rating">평점순</option>
             </select>
           </div>
           
           <!-- 찜한 매장 목록 -->
           <div class="stores-grid">
             <div 
-              v-for="item in wishlistItems" 
-              :key="item.id"
+              v-for="item in filteredItems" 
+              :key="item.wishlistId"
               class="store-card"
+              @click="goToStore(item.store.storeId)"
             >
               <!-- 매장 이미지 영역 -->
               <div class="store-image-area">
-                <div class="store-image">{{ item.imageUrl }}</div>
+                <img 
+                  v-if="item.store.storeImageUrl" 
+                  :src="item.store.storeImageUrl" 
+                  :alt="item.store.storeName"
+                  class="store-image"
+                >
+                <div v-else class="store-image-placeholder">🏪</div>
                 <button 
-                  @click="removeFromWishlist(item.id)"
+                  @click.stop="removeFromWishlist(item.store.storeId)"
                   class="heart-btn active"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -98,28 +170,29 @@ const removeFromWishlist = (storeId: number) => {
               <!-- 매장 정보 -->
               <div class="store-info">
                 <div class="store-header">
-                  <h3 class="store-name">{{ item.storeName }}</h3>
-                  <span class="store-category">{{ item.category }}</span>
+                  <h3 class="store-name">{{ item.store.storeName }}</h3>
                 </div>
                 
-                <p class="store-description">{{ item.description }}</p>
+                <p class="store-description">{{ item.store.description }}</p>
                 
                 <div class="store-stats">
-                  <div class="rating-info">
-                    <span class="star">⭐</span>
-                    <span class="rating">{{ item.rating }}</span>
-                  </div>
+                  <!-- 평점 정보는 백엔드에서 제공하지 않으므로 제거 -->
                   <div class="delivery-info">
-                    <span class="delivery-time">{{ item.deliveryTime }}</span>
                     <span class="delivery-fee">
-                      {{ item.deliveryFee === 0 ? '무료배달' : `배달비 ${item.deliveryFee.toLocaleString()}원` }}
+                      {{ item.store.deliveryTip === 0 ? '무료배달' : `배달비 ${item.store.deliveryTip.toLocaleString()}원` }}
+                    </span>
+                    <span class="min-order">
+                      최소주문 {{ item.store.minOrderAmount.toLocaleString() }}원
                     </span>
                   </div>
                 </div>
                 
                 <div class="store-actions">
-                  <span class="added-date">{{ item.addedDate }} 즐겨찾기</span>
-                  <button class="order-btn">
+                  <span class="added-date">{{ formatDate(item.wishedAt) }} 즐겨찾기</span>
+                  <button 
+                    @click.stop="goToStore(item.store.storeId)"
+                    class="order-btn"
+                  >
                     주문하기
                   </button>
                 </div>
@@ -154,6 +227,71 @@ const removeFromWishlist = (storeId: number) => {
   width: 100%;
   min-height: 100vh;
   background-color: #f8f9fa;
+}
+
+/* 로딩 컨테이너 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  background-color: white;
+  margin: 1rem 0;
+  border-radius: 12px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #6b7280;
+}
+
+/* 에러 컨테이너 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  background-color: white;
+  margin: 1rem 0;
+  border-radius: 12px;
+}
+
+.error-text {
+  font-size: 16px;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  padding: 8px 20px;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background-color: #1f2937;
 }
 
 /* 공통 스타일 */
@@ -268,6 +406,12 @@ const removeFromWishlist = (storeId: number) => {
 }
 
 .store-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-image-placeholder {
   font-size: 48px;
 }
 
@@ -317,15 +461,6 @@ const removeFromWishlist = (storeId: number) => {
   color: #1f2937;
 }
 
-.store-category {
-  padding: 4px 8px;
-  background-color: #f3f4f6;
-  color: #6b7280;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
 .store-description {
   font-size: 14px;
   color: #6b7280;
@@ -356,6 +491,11 @@ const removeFromWishlist = (storeId: number) => {
   color: #1f2937;
 }
 
+.review-count {
+  color: #6b7280;
+  font-size: 12px;
+}
+
 .delivery-info {
   display: flex;
   flex-direction: column;
@@ -363,13 +503,14 @@ const removeFromWishlist = (storeId: number) => {
   gap: 2px;
 }
 
-.delivery-time {
-  color: #6b7280;
-}
-
 .delivery-fee {
   color: #374151;
   font-weight: 500;
+}
+
+.min-order {
+  color: #6b7280;
+  font-size: 12px;
 }
 
 .store-actions {
@@ -465,4 +606,4 @@ const removeFromWishlist = (storeId: number) => {
     font-size: 24px;
   }
 }
-</style> 
+</style>
