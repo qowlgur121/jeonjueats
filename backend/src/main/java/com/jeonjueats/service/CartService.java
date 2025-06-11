@@ -399,7 +399,16 @@ public class CartService {
         log.info("장바구니 전체 비우기 요청 - 사용자: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new CartNotFoundException("장바구니를 찾을 수 없습니다."));
+        
+        // 1. 장바구니 아이템들 삭제
         cartItemRepository.deleteByCartId(cart.getId());
+        log.info("장바구니 아이템 삭제 완료 - 사용자: {}", userId);
+        
+        // 2. 장바구니 상태 초기화 (storeId를 null로 설정)
+        cart.clear();
+        cartRepository.save(cart);
+        log.info("장바구니 상태 초기화 완료 - 사용자: {}", userId);
+        
         log.info("장바구니 전체 비우기 완료 - 사용자: {}", userId);
     }
 

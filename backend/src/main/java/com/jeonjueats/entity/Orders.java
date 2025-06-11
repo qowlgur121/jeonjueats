@@ -65,6 +65,9 @@ public class Orders {
     @Column(columnDefinition = "TEXT")
     private String requests; // 고객 요청 사항
 
+    @Column(name = "phone_number", nullable = false, length = 20)
+    private String phoneNumber; // 전화번호
+
     /**
      * 결제 관련 정보 (MVP는 가상 결제)
      */
@@ -104,7 +107,8 @@ public class Orders {
      * 생성자
      */
     public Orders(Long userId, Long storeId, BigDecimal subtotalAmount, BigDecimal deliveryFeeAtOrder,
-                  String deliveryZipcode, String deliveryAddress1, String deliveryAddress2) {
+                  String deliveryZipcode, String deliveryAddress1, String deliveryAddress2, 
+                  String phoneNumber, String paymentMethod) {
         this.userId = userId;
         this.storeId = storeId;
         this.subtotalAmount = subtotalAmount;
@@ -113,8 +117,9 @@ public class Orders {
         this.deliveryZipcode = deliveryZipcode;
         this.deliveryAddress1 = deliveryAddress1;
         this.deliveryAddress2 = deliveryAddress2;
+        this.phoneNumber = phoneNumber;
         this.status = OrderStatus.PENDING;
-        this.paymentMethod = "VIRTUAL_PAYMENT";
+        this.paymentMethod = paymentMethod != null ? paymentMethod : "VIRTUAL_PAYMENT";
         this.discountAmount = BigDecimal.ZERO;
         this.pointsUsed = BigDecimal.ZERO;
     }

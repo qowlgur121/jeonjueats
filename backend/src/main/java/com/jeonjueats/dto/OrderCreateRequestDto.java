@@ -27,4 +27,12 @@ public class OrderCreateRequestDto {
 
     @Size(max = 500, message = "요청사항은 500자 이내여야 합니다")
     private String requests;
+
+    @NotBlank(message = "전화번호는 필수입니다")
+    @Size(max = 20, message = "전화번호는 20자 이내여야 합니다")
+    private String phoneNumber;
+
+    @NotBlank(message = "결제 수단은 필수입니다")
+    @Size(max = 20, message = "결제 수단은 20자 이내여야 합니다")
+    private String paymentMethod;
 } 

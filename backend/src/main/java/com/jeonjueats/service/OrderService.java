@@ -85,7 +85,9 @@ public class OrderService {
                 DELIVERY_FEE,
                 request.getDeliveryZipcode(),
                 request.getDeliveryAddress1(),
-                request.getDeliveryAddress2()
+                request.getDeliveryAddress2(),
+                request.getPhoneNumber(),
+                request.getPaymentMethod()
         );
 
         if (request.getRequests() != null && !request.getRequests().trim().isEmpty()) {
