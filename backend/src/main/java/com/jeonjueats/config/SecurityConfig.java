@@ -109,7 +109,7 @@ public class SecurityConfig {
                     "/api-docs/**",           // API 문서
                     "/swagger-resources/**",  // Swagger 리소스
                     "/webjars/**",           // Swagger 웹자르
-                    "/images/**"             // 업로드된 이미지 파일 접근
+                    "/api/images/**"         // 업로드된 이미지 파일 접근
                 ).permitAll()
                 
                 // 사장님 전용 API (ROLE_OWNER 권한 필요)
