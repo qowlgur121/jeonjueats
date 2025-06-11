@@ -12,8 +12,11 @@ RUN npm ci --ignore-scripts
 # 소스 파일들 복사
 COPY . .
 
+# Vite 캐시 정리
+RUN rm -rf node_modules/.vite
+
 # 포트 3000 노출
 EXPOSE 3000
 
-# 개발 서버 실행
-CMD ["npm", "run", "dev"] 
+# 개발 서버 실행 (호스트 0.0.0.0 바인딩으로 Docker 컨테이너 외부 접근 허용)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 

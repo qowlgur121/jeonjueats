@@ -1,10 +1,113 @@
-@import './base.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 전주잇츠 커스텀 스타일 */
+:root {
+  /* 쿠팡이츠 스타일 색상 */
+  --primary-color: #00D0FF;
+  --primary-hover: #00B8E6;
+  --primary-dark: #0099CC;
+  --secondary-color: #FFB800;
+  --success-color: #52C41A;
+  --error-color: #FF4D4F;
+  --warning-color: #FAAD14;
+  --info-color: #1890FF;
+}
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* PWA 상태바 스타일 */
+  .pwa-safe-area {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer components {
+  /* 카드 스타일 */
+  .card-base {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100;
+  }
+  
+  /* 버튼 스타일 */
+  .btn-primary {
+    @apply bg-primary-500 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary:hover {
+    @apply bg-primary-600;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-gray-200;
+  }
+  
+  /* 하단 네비게이션 */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .bottom-nav-item {
+    @apply flex flex-col items-center py-2 px-3 text-xs transition-colors duration-200;
+  }
+  
+  .bottom-nav-item.active {
+    @apply text-primary-500;
+  }
+  
+  .bottom-nav-item.inactive {
+    @apply text-gray-400;
+  }
+  
+  /* 매장 카드 */
+  .store-card {
+    @apply card-base p-4 space-y-3 cursor-pointer transition-shadow duration-200;
+  }
+  
+  .store-card:hover {
+    @apply shadow-md;
+  }
+  
+  /* 메뉴 카드 */
+  .menu-card {
+    @apply card-base overflow-hidden cursor-pointer transition-shadow duration-200;
+  }
+  
+  .menu-card:hover {
+    @apply shadow-md;
+  }
+  
+  /* 입력 필드 */
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  
+  /* 검색바 */
+  .search-bar {
+    @apply input-field pl-10 bg-gray-50 border-gray-200;
+  }
+}
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
 }
 
 a,
