@@ -28,4 +28,8 @@ public class UserProfileUpdateRequestDto {
     @Nullable
     @Size(max = 255, message = "상세 주소는 최대 255자까지 입력 가능합니다.")
     private String defaultAddress2;
+
+    @Nullable
+    @Size(max = 20, message = "전화번호는 최대 20자까지 입력 가능합니다.")
+    private String phoneNumber;
 } 

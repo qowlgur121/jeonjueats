@@ -35,16 +35,17 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
-        return UserProfileDto.of(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name(),
+        return UserProfileDto.of(user.getId(), user.getEmail(), user.getNickname(), user.getPhoneNumber(), user.getRole().name(),
                                 user.getDefaultZipcode(), user.getDefaultAddress1(), user.getDefaultAddress2());
     }
 
     /**
      * 내 정보 수정
-     * 닉네임과 기본 배달 주소 수정 가능
+     * 닉네임, 전화번호, 기본 배달 주소 수정 가능
      * 
      * @param userId 현재 로그인한 사용자 ID
      * @param nickname 수정할 닉네임 (nullable)
+     * @param phoneNumber 수정할 전화번호 (nullable)
      * @param defaultZipcode 수정할 기본 배달 주소 우편번호 (nullable)
      * @param defaultAddress1 수정할 기본 배달 주소 기본 주소 (nullable)
      * @param defaultAddress2 수정할 기본 배달 주소 상세 주소 (nullable)
@@ -53,6 +54,7 @@ public class UserService {
     @Transactional
     public UserProfileDto updateMyProfile(Long userId,
                                         String nickname,
+                                        String phoneNumber,
                                         String defaultZipcode,
                                         String defaultAddress1,
                                         String defaultAddress2) {
@@ -67,6 +69,11 @@ public class UserService {
                 throw new IllegalArgumentException("NICKNAME_ALREADY_EXISTS: 이미 사용 중인 닉네임입니다.");
             }
             user.setNickname(nickname);
+        }
+
+        // 전화번호 업데이트
+        if (phoneNumber != null) {
+            user.setPhoneNumber(phoneNumber);
         }
 
         // 주소 정보 업데이트
@@ -84,7 +91,7 @@ public class UserService {
         // userRepository.save(user); // 명시적 호출 필요 없음
 
         log.info("내 정보 수정 완료 - 사용자 ID: {}", userId);
-        return UserProfileDto.of(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name(),
+        return UserProfileDto.of(user.getId(), user.getEmail(), user.getNickname(), user.getPhoneNumber(), user.getRole().name(),
                                 user.getDefaultZipcode(), user.getDefaultAddress1(), user.getDefaultAddress2());
     }
 } 

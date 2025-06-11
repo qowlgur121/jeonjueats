@@ -100,6 +100,7 @@ public class UserController {
             UserProfileDto updatedProfile = userService.updateMyProfile(
                     userId,
                     requestDto.getNickname(),
+                    requestDto.getPhoneNumber(),
                     requestDto.getDefaultZipcode(),
                     requestDto.getDefaultAddress1(),
                     requestDto.getDefaultAddress2()
