@@ -4,12 +4,14 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-dev-debug.log
+lerna-debug.log*
+.pnpm-debug.log*
 
 # Dependency directories
 node_modules/
 
 # Environment variables
+.env.*
 .env
 
 # Editor directories and files
@@ -19,52 +21,34 @@ node_modules/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.sw
 
 # OS specific
 .DS_Store
+Thumbs.db
 
-# Project documentation (until completion)
-README.md
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
 
-# Task Master related files
-tasks.json
-tasks/ 
-.taskmaster
-memory-bank/
+# Test coverage
+coverage/
+*.lcov
 
-# Scripts and project planning files
-scripts/
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+.cache/
 
-# MCP and AI tool configurations
+# Documentation
+docs/
+*.draft.md
+
+# Misc
 .cursor/
-.cursorignore
-.cursorindexingignore
-.roo/
-.specstory/
-.taskmasterconfig
-.windsurfrules
-.roomodes
 config.json
 
-# Claude AI generated documentation files
-CLAUDE.md
-CURRENT_STATUS.md
-NEXT_SESSION_GUIDE.md
-*_GUIDE.md
-*_STATUS.md
-NEXT_SESSION_*.md
-NEXT_PROJECT_*.md
-PROJECT_*.md
-CURRENT_*.md
-
-# Notes and documentation folders
 notes/
-docs/
-
-# Personal environment files
-.env.example
-
-# 각 모듈별 .gitignore에서 해당 기술 스택 관련 파일들을 관리
-# 루트에서는 프로젝트 전체적인 공통 사항만 관리
-
