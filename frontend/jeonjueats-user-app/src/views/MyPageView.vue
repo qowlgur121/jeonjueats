@@ -382,7 +382,6 @@ const searchAddressForProfile = () => {
             
             <div class="app-info">
               <p class="app-version">JeonjuEats v1.0.0</p>
-              <p class="app-copyright">© 2025 JeonjuEats. All rights reserved.</p>
             </div>
           </div>
         </div>
@@ -771,11 +770,6 @@ const searchAddressForProfile = () => {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 4px;
-}
-
-.app-copyright {
-  font-size: 12px;
-  color: #9ca3af;
 }
 
 /* 로딩 상태 */

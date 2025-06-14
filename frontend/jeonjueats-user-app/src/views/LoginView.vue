@@ -166,11 +166,6 @@ const goBack = () => {
       </button>
 
     </form>
-
-    <!-- 푸터 -->
-    <footer class="login-footer">
-      <p>©Coupang Corp. All rights reserved.</p>
-    </footer>
   </div>
 </template>
 
@@ -410,18 +405,6 @@ const goBack = () => {
 .divider {
   color: #e5e7eb;
   margin: 0 12px;
-}
-
-/* 푸터 */
-.login-footer {
-  padding: 20px;
-  text-align: center;
-  border-top: 1px solid #f1f3f4;
-}
-
-.login-footer p {
-  font-size: 12px;
-  color: #9ca3af;
 }
 
 /* 반응형 */
