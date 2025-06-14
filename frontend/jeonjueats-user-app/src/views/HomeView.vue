@@ -18,7 +18,7 @@ const selectedCategoryId = ref<number | null>(null)
 // 라우터
 const router = useRouter()
 
-// 카테고리 데이터 (프론트엔드에서 하드코딩 - 백엔드 DataInitializer와 일치)
+// 카테고리 데이터 
 const categories = ref([
   { id: 1, name: '치킨', emoji: '🍗' },
   { id: 2, name: '피자', emoji: '🍕' },
