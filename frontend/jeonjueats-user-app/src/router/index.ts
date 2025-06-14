@@ -82,6 +82,12 @@ const router = createRouter({
       name: 'terms-of-service',
       component: () => import('../views/TermsOfServiceView.vue'),
       meta: { title: '이용약관' }
+    },
+    {
+      path: '/marketing-policy',
+      name: 'marketing-policy',
+      component: () => import('../views/MarketingPolicyView.vue'),
+      meta: { title: '마케팅 정보 수신 동의' }
     }
   ]
 })

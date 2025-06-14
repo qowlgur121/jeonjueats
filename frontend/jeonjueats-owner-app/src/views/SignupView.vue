@@ -42,7 +42,7 @@ const isEmailValid = computed(() => {
 
 // 비밀번호 유효성 검사
 const isPasswordValid = computed(() => {
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/
   return passwordRegex.test(form.password)
 })
 
@@ -126,6 +126,57 @@ const goBack = () => {
   } else {
     router.back()
   }
+}
+
+// 전화번호 포맷팅 (자동 하이픈 추가)
+const formatPhoneNumber = (value: string) => {
+  // 숫자만 추출
+  const numbers = value.replace(/[^\d]/g, '')
+  
+  // 포맷팅
+  if (numbers.length <= 2) {
+    return numbers
+  }
+  
+  // 서울 지역번호 (02) - 최대 10자리 (02 + 8자리)
+  if (numbers.startsWith('02')) {
+    const limitedNumbers = numbers.slice(0, 10) // 02번호는 최대 10자리
+    
+    if (limitedNumbers.length <= 2) {
+      return limitedNumbers
+    } else if (limitedNumbers.length <= 5) {
+      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2)}`
+    } else if (limitedNumbers.length <= 9) {
+      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2, 5)}-${limitedNumbers.slice(5)}`
+    } else {
+      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2, 6)}-${limitedNumbers.slice(6)}`
+    }
+  }
+  
+  // 휴대폰 및 기타 지역번호 (010, 031, 032 등) - 최대 11자리
+  const limitedNumbers = numbers.slice(0, 11)
+  
+  if (limitedNumbers.length <= 3) {
+    return limitedNumbers
+  } else if (limitedNumbers.length <= 6) {
+    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3)}`
+  } else if (limitedNumbers.length <= 10) {
+    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 6)}-${limitedNumbers.slice(6)}`
+  } else {
+    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 7)}-${limitedNumbers.slice(7)}`
+  }
+}
+
+// 전화번호 입력 핸들러
+const handlePhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const formatted = formatPhoneNumber(target.value)
+  form.phoneNumber = formatted
+  
+  // 커서 위치 조정 (Vue의 양방향 바인딩 때문에 필요)
+  setTimeout(() => {
+    target.value = formatted
+  }, 0)
 }
 
 // 카카오 주소 API
@@ -262,10 +313,12 @@ const searchAddress = () => {
         <div class="form-group">
           <label class="form-label">전화번호</label>
           <input
-            v-model="form.phoneNumber"
+            :value="form.phoneNumber"
+            @input="handlePhoneInput"
             type="tel"
             placeholder="010-1234-5678"
             class="form-input"
+            maxlength="13"
             @keyup.enter="nextStep"
           >
         </div>
@@ -283,18 +336,6 @@ const searchAddress = () => {
       <div v-else-if="currentStep === 3" class="step-content">
         <h2 class="step-title">가게 주소를 입력해주세요</h2>
         <p class="step-description">가게 운영에 사용할 주소입니다 (선택사항)</p>
-
-        <!-- 우편번호 -->
-        <div class="form-group">
-          <label class="form-label">우편번호</label>
-          <input
-            v-model="form.zipcode"
-            type="text"
-            placeholder="우편번호"
-            class="form-input"
-            readonly
-          >
-        </div>
 
         <!-- 주소 -->
         <div class="form-group">
@@ -315,12 +356,12 @@ const searchAddress = () => {
         </div>
 
         <!-- 상세주소 -->
-        <div class="form-group">
+        <div class="form-group" v-if="form.address1">
           <label class="form-label">상세주소</label>
           <input
             v-model="form.address2"
             type="text"
-            placeholder="상세 주소를 입력해주세요 (선택)"
+            placeholder="상세 주소를 입력해주세요"
             class="form-input"
             @keyup.enter="nextStep"
           >
@@ -387,7 +428,7 @@ const searchAddress = () => {
             <span class="checkbox-label">
               <span class="optional">[선택]</span> 마케팅 정보 수신 동의
             </span>
-            <span class="link-detail" style="color: #9ca3af; cursor: default;">-</span>
+            <a href="/marketing-policy" target="_blank" class="link-detail">보기</a>
           </label>
         </div>
 

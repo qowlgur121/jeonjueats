@@ -50,6 +50,24 @@ const router = createRouter({
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/privacy-policy',
+      name: 'privacy-policy',
+      component: () => import('../views/PrivacyPolicyView.vue'),
+      meta: { title: '개인정보 처리방침' }
+    },
+    {
+      path: '/terms-of-service',
+      name: 'terms-of-service',
+      component: () => import('../views/TermsOfServiceView.vue'),
+      meta: { title: '이용약관' }
+    },
+    {
+      path: '/marketing-policy',
+      name: 'marketing-policy',
+      component: () => import('../views/MarketingPolicyView.vue'),
+      meta: { title: '마케팅 정보 수신 동의' }
     }
   ],
 })
