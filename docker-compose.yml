@@ -59,16 +59,21 @@ services:
       - jeonjueats-network
     restart: unless-stopped
 
-  # 사장님용 Vue.js 프론트엔드
+  # 사장님용 Vue.js 프론트엔드 (개발 모드)
   frontend-owner:
     build:
       context: ./frontend/jeonjueats-owner-app
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: jeonjueats-frontend-owner
     ports:
-      - "3001:80"
+      - "3001:3001"
     depends_on:
       - backend
+    volumes:
+      - ./frontend/jeonjueats-owner-app:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     networks:
       - jeonjueats-network
     restart: unless-stopped

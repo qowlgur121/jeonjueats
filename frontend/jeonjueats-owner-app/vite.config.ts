@@ -15,4 +15,25 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    host: '0.0.0.0',
+    port: 3001,
+    watch: {
+      usePolling: true
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
+  optimizeDeps: {
+    force: true
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 3001
+  }
 })
