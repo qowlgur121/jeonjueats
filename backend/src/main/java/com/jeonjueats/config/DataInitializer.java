@@ -72,7 +72,7 @@ public class DataInitializer implements CommandLineRunner {
 
     /**
      * 사용자 초기 데이터 생성
-     * 일반 사용자 3명, 사장님 2명 생성
+     * 일반 사용자 5명, 사장님 7명 생성
      */
     private void initializeUsers() {
         if (userRepository.count() > 0) {
@@ -82,24 +82,37 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info("사용자 초기 데이터를 생성합니다...");
 
-        // 일반 사용자 3명 생성
-        createUser("user1@example.com", "password", "고객1", UserRole.ROLE_USER);
-        createUser("user2@example.com", "password", "고객2", UserRole.ROLE_USER);
-        createUser("user3@example.com", "password", "고객3", UserRole.ROLE_USER);
+        // 일반 사용자 5명 생성
+        createUser("user1@example.com", "password", "김고객", UserRole.ROLE_USER, "063-1234-5678", "54901", "전북 전주시 완산구 태평로 123", "101호");
+        createUser("user2@example.com", "password", "이고객", UserRole.ROLE_USER, "063-2345-6789", "55041", "전북 전주시 덕진구 건산로 456", "202호");
+        createUser("user3@example.com", "password", "박고객", UserRole.ROLE_USER, "010-3456-7890", "54896", "전북 전주시 완산구 팔달로 789", "303호");
+        createUser("user4@example.com", "password", "최고객", UserRole.ROLE_USER, "010-4567-8901", "55069", "전북 전주시 덕진구 백제대로 101", "404호");
+        createUser("user5@example.com", "password", "정고객", UserRole.ROLE_USER, "010-5678-9012", "54933", "전북 전주시 완산구 전주천동로 112", "505호");
 
-        // 사장님 2명 생성
-        createUser("owner1@example.com", "password", "사장님1", UserRole.ROLE_OWNER);
-        createUser("owner2@example.com", "password", "사장님2", UserRole.ROLE_OWNER);
+        // 사장님 7명 생성 (가게 3-4개씩 배분)
+        createUser("owner1@example.com", "password", "김사장", UserRole.ROLE_OWNER, "063-1111-1111", "54968", "전북 전주시 완산구 고사동 11-1", "101호");
+        createUser("owner2@example.com", "password", "이사장", UserRole.ROLE_OWNER, "063-2222-2222", "55077", "전북 전주시 덕진구 송천동 22-2", "202호");
+        createUser("owner3@example.com", "password", "박사장", UserRole.ROLE_OWNER, "010-3333-3333", "54913", "전북 전주시 완산구 중앙동 33-3", "303호");
+        createUser("owner4@example.com", "password", "최사장", UserRole.ROLE_OWNER, "010-4444-4444", "55002", "전북 전주시 덕진구 진북동 44-4", "404호");
+        createUser("owner5@example.com", "password", "정사장", UserRole.ROLE_OWNER, "010-5555-5555", "54949", "전북 전주시 완산구 서노송동 55-5", "505호");
+        createUser("owner6@example.com", "password", "장사장", UserRole.ROLE_OWNER, "010-6666-6666", "55120", "전북 전주시 덕진구 금암동 66-6", "606호");
+        createUser("owner7@example.com", "password", "윤사장", UserRole.ROLE_OWNER, "010-7777-7777", "54870", "전북 전주시 완산구 효자동 77-7", "707호");
 
-        log.info("사용자 5명 생성 완료");
+        log.info("사용자 12명 생성 완료 (고객 5명, 사장님 7명)");
     }
 
     /**
      * 사용자 생성 헬퍼 메서드
      */
-    private void createUser(String email, String password, String nickname, UserRole role) {
+    private void createUser(String email, String password, String nickname, UserRole role, 
+                           String phoneNumber, String zipcode, String address1, String address2) {
         String encodedPassword = passwordEncoder.encode(password);
         User user = new User(email, encodedPassword, nickname, role);
+        
+        // 전화번호와 주소 정보 설정
+        user.updatePhoneNumber(phoneNumber);
+        user.updateDefaultAddress(zipcode, address1, address2);
+        
         userRepository.save(user);
     }
 
@@ -115,11 +128,21 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info("가게 초기 데이터를 생성합니다...");
 
-        // 사장님 계정 조회
+        // 사장님 계정 조회 (7명)
         User owner1 = userRepository.findByEmail("owner1@example.com")
-                .orElseThrow(() -> new RuntimeException("사장님1 계정을 찾을 수 없습니다"));
+                .orElseThrow(() -> new RuntimeException("김사장 계정을 찾을 수 없습니다"));
         User owner2 = userRepository.findByEmail("owner2@example.com")
-                .orElseThrow(() -> new RuntimeException("사장님2 계정을 찾을 수 없습니다"));
+                .orElseThrow(() -> new RuntimeException("이사장 계정을 찾을 수 없습니다"));
+        User owner3 = userRepository.findByEmail("owner3@example.com")
+                .orElseThrow(() -> new RuntimeException("박사장 계정을 찾을 수 없습니다"));
+        User owner4 = userRepository.findByEmail("owner4@example.com")
+                .orElseThrow(() -> new RuntimeException("최사장 계정을 찾을 수 없습니다"));
+        User owner5 = userRepository.findByEmail("owner5@example.com")
+                .orElseThrow(() -> new RuntimeException("정사장 계정을 찾을 수 없습니다"));
+        User owner6 = userRepository.findByEmail("owner6@example.com")
+                .orElseThrow(() -> new RuntimeException("장사장 계정을 찾을 수 없습니다"));
+        User owner7 = userRepository.findByEmail("owner7@example.com")
+                .orElseThrow(() -> new RuntimeException("윤사장 계정을 찾을 수 없습니다"));
 
         // 카테고리 조회
         Category chickenCategory = categoryRepository.findByName("치킨")
@@ -143,235 +166,106 @@ public class DataInitializer implements CommandLineRunner {
         Category lateNightCategory = categoryRepository.findByName("야식")
                 .orElseThrow(() -> new RuntimeException("야식 카테고리를 찾을 수 없습니다"));
 
-        // 치킨 가게들 (4개)
+        // 치킨 가게들 (4개) - owner1(김사장) 4개
         createStore("맛있는 치킨집", "신선한 재료로 만드는 바삭한 치킨", "54321", "전북 전주시 완산구 효자동", null, "063-222-3333",
                    "/api/images/chicken1.jpg", chickenCategory.getId(), 15000, 3000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
         
         createStore("황금올리브치킨", "황금빛 바삭함의 완성", "54322", "전북 전주시 덕진구 금암동", null, "063-333-4444",
-                   "/api/images/chicken2.jpg", chickenCategory.getId(), 16000, 2500, "매일 11:00-23:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/chicken2.jpg", chickenCategory.getId(), 16000, 2500, "매일 11:00-23:00", StoreStatus.OPEN, owner1.getId());
         
         createStore("BHC치킨 전주점", "뿌링클의 원조", "54323", "전북 전주시 완산구 중앙동", null, "063-444-5555",
                    "/api/images/chicken3.jpg", chickenCategory.getId(), 18000, 3000, "매일 12:00-24:00", StoreStatus.OPEN, owner1.getId());
         
         createStore("굽네치킨", "오븐에 구운 건강한 치킨", "54324", "전북 전주시 덕진구 덕진동", null, "063-555-6666",
-                   "/api/images/chicken4.jpg", chickenCategory.getId(), 17000, 2000, "매일 11:00-23:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/chicken4.jpg", chickenCategory.getId(), 17000, 2000, "매일 11:00-23:00", StoreStatus.OPEN, owner1.getId());
 
-        // 피자 가게들 (3개)
+        // 피자 가게들 (3개) - owner2(이사장) 3개
         createStore("전주 피자하우스", "수제 도우로 만드는 정통 이탈리안 피자", "54325", "전북 전주시 덕진구 금암동", null, "063-666-7777",
-                   "/api/images/pizza1.jpg", pizzaCategory.getId(), 20000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/pizza1.jpg", pizzaCategory.getId(), 20000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner2.getId());
         
         createStore("도미노피자", "30분 배달 약속", "54326", "전북 전주시 완산구 효자동", null, "063-777-8888",
                    "/api/images/pizza2.jpg", pizzaCategory.getId(), 15000, 1500, "매일 10:30-23:00", StoreStatus.OPEN, owner2.getId());
         
         createStore("피자스쿨", "학생들이 좋아하는 가성비 피자", "54327", "전북 전주시 덕진구 인후동", null, "063-888-9999",
-                   "/api/images/pizza3.jpg", pizzaCategory.getId(), 12000, 2000, "매일 11:00-24:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/pizza3.jpg", pizzaCategory.getId(), 12000, 2000, "매일 11:00-24:00", StoreStatus.OPEN, owner2.getId());
 
-        // 중식 가게들 (3개)
+        // 중식 가게들 (3개) - owner3(박사장) 3개
         createStore("용궁반점", "정통 중화요리 전문점", "54328", "전북 전주시 덕진구 인후동", null, "063-999-0000",
-                   "/api/images/chinese1.jpg", chineseCategory.getId(), 8000, 2500, "매일 10:00-21:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/chinese1.jpg", chineseCategory.getId(), 8000, 2500, "매일 10:00-21:00", StoreStatus.OPEN, owner3.getId());
         
         createStore("차이나타운", "깔끔한 중식당", "54329", "전북 전주시 완산구 중앙동", null, "063-111-2222",
-                   "/api/images/chinese2.jpg", chineseCategory.getId(), 12000, 3000, "매일 11:00-21:30", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/chinese2.jpg", chineseCategory.getId(), 12000, 3000, "매일 11:00-21:30", StoreStatus.OPEN, owner3.getId());
         
         createStore("홍콩반점", "광동식 중화요리", "54330", "전북 전주시 덕진구 덕진동", null, "063-222-3333",
-                   "/api/images/chinese3.jpg", chineseCategory.getId(), 15000, 2500, "매일 11:30-22:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/chinese3.jpg", chineseCategory.getId(), 15000, 2500, "매일 11:30-22:00", StoreStatus.OPEN, owner3.getId());
 
-        // 한식 가게들 (4개)
+        // 한식 가게들 (4개) - owner4(최사장) 4개
         createStore("엄마손 김치찌개", "집에서 먹는 것 같은 푸근한 한식", "54331", "전북 전주시 완산구 서신동", null, "063-333-4444",
-                   "/api/images/korean1.jpg", koreanCategory.getId(), 8000, 2000, "매일 06:00-22:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/korean1.jpg", koreanCategory.getId(), 8000, 2000, "매일 06:00-22:00", StoreStatus.OPEN, owner4.getId());
         
         createStore("전주 비빔밥", "전주 대표 음식 비빔밥", "54332", "전북 전주시 완산구 풍남동", null, "063-444-5555",
-                   "/api/images/korean2.jpg", koreanCategory.getId(), 10000, 1500, "매일 08:00-20:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/korean2.jpg", koreanCategory.getId(), 10000, 1500, "매일 08:00-20:00", StoreStatus.OPEN, owner4.getId());
         
         createStore("황제갈비", "최고급 한우갈비", "54333", "전북 전주시 덕진구 덕진동", null, "063-555-6666",
-                   "/api/images/korean3.jpg", koreanCategory.getId(), 35000, 5000, "매일 12:00-22:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/korean3.jpg", koreanCategory.getId(), 35000, 5000, "매일 12:00-22:00", StoreStatus.OPEN, owner4.getId());
         
         createStore("한정식집", "정갈한 한정식", "54334", "전북 전주시 완산구 중앙동", null, "063-666-7777",
-                   "/api/images/korean4.jpg", koreanCategory.getId(), 25000, 4000, "매일 11:00-21:00", StoreStatus.CLOSED, owner2.getId());
+                   "/api/images/korean4.jpg", koreanCategory.getId(), 25000, 4000, "매일 11:00-21:00", StoreStatus.CLOSED, owner4.getId());
 
-        // 일식 가게들 (2개)
+        // 일식 가게들 (2개) - owner5(정사장) 2개
         createStore("스시장인", "신선한 일본 정통 스시", "54335", "전북 전주시 완산구 효자동", null, "063-777-8888",
-                   "/api/images/japanese1.jpg", japaneseCategory.getId(), 30000, 3000, "매일 11:30-21:30", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/japanese1.jpg", japaneseCategory.getId(), 30000, 3000, "매일 11:30-21:30", StoreStatus.OPEN, owner5.getId());
         
         createStore("라멘하우스", "진한 돈코츠 라멘", "54336", "전북 전주시 덕진구 인후동", null, "063-888-9999",
-                   "/api/images/japanese2.jpg", japaneseCategory.getId(), 12000, 2500, "매일 11:00-22:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/japanese2.jpg", japaneseCategory.getId(), 12000, 2500, "매일 11:00-22:00", StoreStatus.OPEN, owner5.getId());
 
-        // 양식 가게들 (3개)
+        // 양식 가게들 (3개) - owner5(정사장) 3개 (총 5개)
         createStore("파스타 킹", "정통 이탈리안 파스타", "54337", "전북 전주시 완산구 중앙동", null, "063-999-0000",
-                   "/api/images/western1.jpg", westernCategory.getId(), 15000, 2000, "매일 11:00-21:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/western1.jpg", westernCategory.getId(), 15000, 2000, "매일 11:00-21:00", StoreStatus.OPEN, owner5.getId());
         
         createStore("스테이크하우스", "프리미엄 스테이크 전문점", "54338", "전북 전주시 덕진구 금암동", null, "063-111-2222",
-                   "/api/images/western2.jpg", westernCategory.getId(), 40000, 4000, "매일 17:00-23:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/western2.jpg", westernCategory.getId(), 40000, 4000, "매일 17:00-23:00", StoreStatus.OPEN, owner5.getId());
         
         createStore("햄버거팩토리", "수제 패티 햄버거", "54339", "전북 전주시 완산구 삼천동", null, "063-222-3333",
-                   "/api/images/western3.jpg", westernCategory.getId(), 8000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/western3.jpg", westernCategory.getId(), 8000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner5.getId());
 
-        // 분식 가게들 (3개)
+        // 분식 가게들 (3개) - owner6(장사장) 3개
         createStore("떡볶이명가", "쫄깃한 떡볶이와 순대", "54340", "전북 전주시 완산구 서신동", null, "063-333-4444",
-                   "/api/images/snack1.jpg", snackCategory.getId(), 5000, 1000, "매일 10:00-22:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/snack1.jpg", snackCategory.getId(), 5000, 1000, "매일 10:00-22:00", StoreStatus.OPEN, owner6.getId());
         
         createStore("김밥천국 전주점", "24시간 든든한 한끼", "54341", "전북 전주시 덕진구 덕진동", null, "063-444-5555",
-                   "/api/images/snack2.jpg", snackCategory.getId(), 3000, 1500, "24시간 운영", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/snack2.jpg", snackCategory.getId(), 3000, 1500, "24시간 운영", StoreStatus.OPEN, owner6.getId());
         
         createStore("호떡집", "달콤한 전주 호떡", "54342", "전북 전주시 완산구 풍남동", null, "063-555-6666",
-                   "/api/images/snack3.jpg", snackCategory.getId(), 2000, 1000, "매일 10:00-21:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/snack3.jpg", snackCategory.getId(), 2000, 1000, "매일 10:00-21:00", StoreStatus.OPEN, owner6.getId());
 
-        // 카페·디저트 (2개)
+        // 카페·디저트 (2개) - owner6(장사장) 2개 (총 5개)  
         createStore("스타벅스 전주효자점", "커피와 디저트의 완벽한 조화", "54343", "전북 전주시 완산구 효자동", null, "063-666-7777",
-                   "/api/images/cafe1.jpg", cafeCategory.getId(), 5000, 1000, "매일 06:00-22:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/cafe1.jpg", cafeCategory.getId(), 5000, 1000, "매일 06:00-22:00", StoreStatus.OPEN, owner6.getId());
         
         createStore("투썸플레이스", "달콤한 디저트와 커피", "54344", "전북 전주시 덕진구 금암동", null, "063-777-8888",
-                   "/api/images/cafe2.jpg", cafeCategory.getId(), 6000, 1500, "매일 07:00-23:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/cafe2.jpg", cafeCategory.getId(), 6000, 1500, "매일 07:00-23:00", StoreStatus.OPEN, owner6.getId());
 
-        // 족발·보쌈 (2개)
+        // 족발·보쌈 (2개) - owner7(윤사장) 2개
         createStore("원조할머니족발", "50년 전통의 족발 맛", "54345", "전북 전주시 완산구 중앙동", null, "063-888-9999",
-                   "/api/images/jokbal1.jpg", jokbalCategory.getId(), 25000, 3000, "매일 15:00-24:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/jokbal1.jpg", jokbalCategory.getId(), 25000, 3000, "매일 15:00-24:00", StoreStatus.OPEN, owner7.getId());
         
         createStore("보쌈집", "부드러운 수육과 보쌈", "54346", "전북 전주시 덕진구 인후동", null, "063-999-0000",
-                   "/api/images/jokbal2.jpg", jokbalCategory.getId(), 22000, 2500, "매일 16:00-02:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/jokbal2.jpg", jokbalCategory.getId(), 22000, 2500, "매일 16:00-02:00", StoreStatus.OPEN, owner7.getId());
 
-        // 야식 가게들 (3개)
+        // 야식 가게들 (3개) - owner7(윤사장) 3개 (총 5개)
         createStore("야식왕", "늦은 밤 든든한 한끼", "54347", "전북 전주시 완산구 효자동", null, "063-111-2222",
-                   "/api/images/latenight1.jpg", lateNightCategory.getId(), 8000, 2000, "매일 20:00-06:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/latenight1.jpg", lateNightCategory.getId(), 8000, 2000, "매일 20:00-06:00", StoreStatus.OPEN, owner7.getId());
         
         createStore("치킨호프", "치킨과 맥주의 완벽한 조합", "54348", "전북 전주시 덕진구 덕진동", null, "063-222-3333",
-                   "/api/images/latenight2.jpg", lateNightCategory.getId(), 15000, 2500, "매일 18:00-03:00", StoreStatus.OPEN, owner2.getId());
+                   "/api/images/latenight2.jpg", lateNightCategory.getId(), 15000, 2500, "매일 18:00-03:00", StoreStatus.OPEN, owner7.getId());
         
         createStore("포차", "전통 포장마차 야식", "54349", "전북 전주시 완산구 서신동", null, "063-333-4444",
-                   "/api/images/latenight3.jpg", lateNightCategory.getId(), 12000, 2000, "매일 19:00-04:00", StoreStatus.OPEN, owner1.getId());
+                   "/api/images/latenight3.jpg", lateNightCategory.getId(), 12000, 2000, "매일 19:00-04:00", StoreStatus.OPEN, owner7.getId());
 
-        log.info("가게 25개 생성 완료");
+        log.info("가게 25개 생성 완료 (사장님 7명에게 균등 배분)");
     }
 
-    /**
-     * 가게 생성 (20개 이상)
-     */
-    private void createStores() {
-        log.info("가게 생성 시작");
-
-        // 카테고리와 사장님 조회
-        Category chickenCategory = categoryRepository.findByName("치킨").orElse(null);
-        Category pizzaCategory = categoryRepository.findByName("피자").orElse(null);
-        Category chineseCategory = categoryRepository.findByName("중식").orElse(null);
-        Category koreanCategory = categoryRepository.findByName("한식").orElse(null);
-        Category japaneseCategory = categoryRepository.findByName("일식").orElse(null);
-        Category westernCategory = categoryRepository.findByName("양식").orElse(null);
-        Category snackCategory = categoryRepository.findByName("분식").orElse(null);
-        Category cafeCategory = categoryRepository.findByName("카페·디저트").orElse(null);
-        Category jokbalCategory = categoryRepository.findByName("족발·보쌈").orElse(null);
-        Category lateNightCategory = categoryRepository.findByName("야식").orElse(null);
-
-        User owner1 = userRepository.findByEmail("owner@example.com").orElse(null);
-        User owner2 = userRepository.findByEmail("owner2@example.com").orElse(null);
-
-        // 치킨 가게들 (4개)
-        createStore("맛있는 치킨집", "신선한 재료로 만드는 바삭한 치킨", "54321", "전북 전주시 완산구 효자동", null, "063-222-3333",
-                   "/api/images/chicken1.jpg", chickenCategory.getId(), 15000, 3000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("황금올리브치킨", "황금빛 바삭함의 완성", "54322", "전북 전주시 덕진구 금암동", null, "063-333-4444",
-                   "/api/images/chicken2.jpg", chickenCategory.getId(), 16000, 2500, "매일 11:00-23:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("BHC치킨 전주점", "뿌링클의 원조", "54323", "전북 전주시 완산구 중앙동", null, "063-444-5555",
-                   "/api/images/chicken3.jpg", chickenCategory.getId(), 18000, 3000, "매일 12:00-24:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("교촌치킨 전주효자점", "허니콤보의 달콤함", "54324", "전북 전주시 완산구 효자동", null, "063-555-6666",
-                   "/api/images/chicken5.jpg", chickenCategory.getId(), 17000, 2000, "매일 11:00-23:30", StoreStatus.OPEN, owner2.getId());
-
-        // 피자 가게들 (4개)
-        createStore("전주 피자하우스", "수제 도우로 만드는 정통 이탈리안 피자", "54325", "전북 전주시 덕진구 인후동", null, "063-666-7777",
-                   "/api/images/pizza1.jpg", pizzaCategory.getId(), 20000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("도미노피자 전주점", "30분 배달 보장", "54326", "전북 전주시 완산구 서신동", null, "063-777-8888",
-                   "/api/images/pizza2.jpg", pizzaCategory.getId(), 25000, 3000, "매일 10:30-23:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("미스터피자 전주덕진점", "프리미엄 피자의 완성", "54327", "전북 전주시 덕진구 덕진동", null, "063-888-9999",
-                   "/api/images/pizza3.jpg", pizzaCategory.getId(), 28000, 2500, "매일 11:00-22:30", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("파파존스 전주점", "베터 잉그리디언츠, 베터 피자", "54328", "전북 전주시 완산구 팔복동", null, "063-100-2000",
-                   "/api/images/pizza3.jpg", pizzaCategory.getId(), 30000, 3500, "매일 11:00-23:00", StoreStatus.OPEN, owner2.getId());
-
-        // 중식 가게들 (3개)
-        createStore("용궁반점", "정통 중화요리 전문점", "54329", "전북 전주시 덕진구 인후동", null, "063-999-0000",
-                   "/api/images/chinese1.jpg", chineseCategory.getId(), 8000, 2500, "매일 10:00-21:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("전주반점", "50년 전통의 맛", "54330", "전북 전주시 완산구 중앙동", null, "063-111-2222",
-                   "/api/images/chinese3.jpg", chineseCategory.getId(), 7500, 2000, "매일 09:00-20:30", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("홍콩반점0410", "달콤짜장의 원조", "54331", "전북 전주시 덕진구 금암동", null, "063-222-3333",
-                   "/api/images/chinese3.jpg", chineseCategory.getId(), 9000, 3000, "매일 11:00-22:00", StoreStatus.OPEN, owner2.getId());
-
-        // 한식 가게들 (4개)  
-        createStore("전통 한정식", "전주 전통 한정식 전문점", "54332", "전북 전주시 완산구 경기전길", null, "063-333-4444",
-                   "/api/images/korean4.jpg", koreanCategory.getId(), 25000, 4000, "매일 11:00-21:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("청국장 전문점", "구수한 전통의 맛", "54333", "전북 전주시 완산구 서학동", null, "063-444-5555",
-                   "/api/images/korean4.jpg", koreanCategory.getId(), 12000, 2500, "매일 07:00-20:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("전주식당", "집밥 같은 따뜻한 맛", "54334", "전북 전주시 덕진구 호성동", null, "063-555-6666",
-                   "/api/images/korean4.jpg", koreanCategory.getId(), 8000, 2000, "매일 06:00-21:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("고향집 백반", "정갈한 한상차림", "54335", "전북 전주시 완산구 중화산동", null, "063-666-7777",
-                   "/api/images/korean4.jpg", koreanCategory.getId(), 10000, 2500, "매일 07:00-21:00", StoreStatus.OPEN, owner2.getId());
-
-        // 일식 가게들 (3개)
-        createStore("스시 마사", "신선한 일본식 스시", "54336", "전북 전주시 덕진구 덕진동", null, "063-777-8888",
-                   "/api/images/japanese2.jpg", japaneseCategory.getId(), 30000, 3000, "매일 12:00-22:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("라멘하우스", "진한 국물의 라멘 전문점", "54337", "전북 전주시 완산구 중노송동", null, "063-888-9999",
-                   "/api/images/japanese2.jpg", japaneseCategory.getId(), 12000, 2500, "매일 11:00-22:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("덴뿌라 맛집", "바삭한 덴뿌라의 완성", "54338", "전북 전주시 덕진구 인후동", null, "063-999-1111",
-                   "/api/images/japanese2.jpg", japaneseCategory.getId(), 18000, 3000, "매일 12:00-21:30", StoreStatus.OPEN, owner1.getId());
-
-        // 양식 가게들 (3개)
-        createStore("파스타 스테이션", "정통 이탈리아 파스타", "54339", "전북 전주시 완산구 효자동", null, "063-111-2222",
-                   "/api/images/western1.jpg", westernCategory.getId(), 15000, 2500, "매일 11:00-22:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("스테이크하우스", "프리미엄 등심 스테이크", "54340", "전북 전주시 덕진구 금암동", null, "063-222-3333",
-                   "/api/images/western2.jpg", westernCategory.getId(), 35000, 4000, "매일 17:00-23:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("햄버거팩토리", "수제 패티 햄버거", "54341", "전북 전주시 완산구 삼천동", null, "063-333-4444",
-                   "/api/images/western3.jpg", westernCategory.getId(), 8000, 2000, "매일 10:00-22:00", StoreStatus.OPEN, owner2.getId());
-
-        // 분식 가게들 (3개)
-        createStore("떡볶이명가", "쫄깃한 떡볶이와 순대", "54342", "전북 전주시 완산구 서신동", null, "063-222-3333",
-                   "/api/images/snack1.jpg", snackCategory.getId(), 5000, 1000, "매일 10:00-22:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("김밥천국 전주점", "24시간 든든한 한끼", "54343", "전북 전주시 덕진구 덕진동", null, "063-333-4444",
-                   "/api/images/snack2.jpg", snackCategory.getId(), 3000, 1500, "24시간 운영", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("호떡집", "달콤한 전주 호떡", "54344", "전북 전주시 완산구 풍남동", null, "063-444-5555",
-                   "/api/images/snack3.jpg", snackCategory.getId(), 2000, 1000, "매일 10:00-21:00", StoreStatus.OPEN, owner1.getId());
-
-        // 카페·디저트 (3개)
-        createStore("스타벅스 전주효자점", "커피와 디저트의 완벽한 조화", "54345", "전북 전주시 완산구 효자동", null, "063-555-6666",
-                   "/api/images/cafe1.jpg", cafeCategory.getId(), 5000, 1000, "매일 06:00-22:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("투썸플레이스", "달콤한 디저트와 커피", "54346", "전북 전주시 덕진구 금암동", null, "063-666-7777",
-                   "/api/images/cafe2.jpg", cafeCategory.getId(), 6000, 1500, "매일 07:00-23:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("파리바게뜨", "신선한 빵과 케이크", "54347", "전북 전주시 완산구 중앙동", null, "063-777-8888",
-                   "/api/images/cafe2.jpg", cafeCategory.getId(), 4000, 1000, "매일 06:30-23:00", StoreStatus.OPEN, owner2.getId());
-
-        // 족발·보쌈 (2개)
-        createStore("원조할머니족발", "50년 전통의 족발 맛", "54348", "전북 전주시 완산구 중앙동", null, "063-888-9999",
-                   "/api/images/jokbal1.jpg", jokbalCategory.getId(), 25000, 3000, "매일 15:00-24:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("보쌈집", "부드러운 수육과 보쌈", "54349", "전북 전주시 덕진구 인후동", null, "063-999-0000",
-                   "/api/images/jokbal2.jpg", jokbalCategory.getId(), 22000, 2500, "매일 16:00-02:00", StoreStatus.OPEN, owner2.getId());
-
-        // 야식 가게들 (3개)
-        createStore("야식왕", "늦은 밤 든든한 한끼", "54350", "전북 전주시 완산구 효자동", null, "063-111-2222",
-                   "/api/images/latenight1.jpg", lateNightCategory.getId(), 8000, 2000, "매일 20:00-06:00", StoreStatus.OPEN, owner1.getId());
-        
-        createStore("치킨호프", "치킨과 맥주의 완벽한 조합", "54351", "전북 전주시 덕진구 덕진동", null, "063-222-3333",
-                   "/api/images/latenight2.jpg", lateNightCategory.getId(), 15000, 2500, "매일 18:00-03:00", StoreStatus.OPEN, owner2.getId());
-        
-        createStore("포차", "전통 포장마차 야식", "54352", "전북 전주시 완산구 서신동", null, "063-333-4444",
-                   "/api/images/latenight3.jpg", lateNightCategory.getId(), 12000, 2000, "매일 19:00-04:00", StoreStatus.OPEN, owner1.getId());
-
-        log.info("가게 25개 생성 완료");
-    }
 
     /**
      * 가게 생성
