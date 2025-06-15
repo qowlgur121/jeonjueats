@@ -32,4 +32,11 @@ public class UserProfileUpdateRequestDto {
     @Nullable
     @Size(max = 20, message = "전화번호는 최대 20자까지 입력 가능합니다.")
     private String phoneNumber;
+
+    @Nullable
+    private String currentPassword;
+
+    @Nullable
+    @Size(min = 8, max = 20, message = "새 비밀번호는 8자 이상 20자 이하로 입력해주세요.")
+    private String newPassword;
 } 

@@ -39,8 +39,9 @@ public class AuthService {
      */
     @Transactional
     public SignupResponseDto signup(SignupRequestDto requestDto) {
-        log.info("회원가입 요청: email={}, nickname={}, role={}", 
-                requestDto.getEmail(), requestDto.getNickname(), requestDto.getRole());
+        log.info("회원가입 요청: email={}, nickname={}, role={}, phone={}, zipcode={}, address1={}, address2={}", 
+                requestDto.getEmail(), requestDto.getNickname(), requestDto.getRole(),
+                requestDto.getPhoneNumber(), requestDto.getZipcode(), requestDto.getAddress1(), requestDto.getAddress2());
 
         // 1. 이메일 중복 확인
         if (userRepository.existsByEmail(requestDto.getEmail())) {
@@ -69,6 +70,17 @@ public class AuthService {
                 encodedPassword,
                 requestDto.getNickname(),
                 userRole
+        );
+        
+        // 전화번호와 주소 정보 설정
+        log.info("전화번호 설정: {}", requestDto.getPhoneNumber());
+        user.updatePhoneNumber(requestDto.getPhoneNumber());
+        log.info("주소 설정: zipcode={}, address1={}, address2={}", 
+                requestDto.getZipcode(), requestDto.getAddress1(), requestDto.getAddress2());
+        user.updateDefaultAddress(
+                requestDto.getZipcode(),
+                requestDto.getAddress1(),
+                requestDto.getAddress2()
         );
 
         User savedUser = userRepository.save(user);

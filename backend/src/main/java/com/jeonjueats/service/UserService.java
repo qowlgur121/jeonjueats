@@ -7,10 +7,10 @@ import com.jeonjueats.exception.UserNotFoundException;
 import com.jeonjueats.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 서비스 클래스
@@ -23,6 +23,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 내 정보 조회
@@ -41,7 +42,7 @@ public class UserService {
 
     /**
      * 내 정보 수정
-     * 닉네임, 전화번호, 기본 배달 주소 수정 가능
+     * 닉네임, 전화번호, 기본 배달 주소, 비밀번호 수정 가능
      * 
      * @param userId 현재 로그인한 사용자 ID
      * @param nickname 수정할 닉네임 (nullable)
@@ -49,6 +50,8 @@ public class UserService {
      * @param defaultZipcode 수정할 기본 배달 주소 우편번호 (nullable)
      * @param defaultAddress1 수정할 기본 배달 주소 기본 주소 (nullable)
      * @param defaultAddress2 수정할 기본 배달 주소 상세 주소 (nullable)
+     * @param currentPassword 현재 비밀번호 (비밀번호 변경 시 필수)
+     * @param newPassword 새 비밀번호 (nullable)
      * @return 업데이트된 UserProfileDto
      */
     @Transactional
@@ -57,7 +60,9 @@ public class UserService {
                                         String phoneNumber,
                                         String defaultZipcode,
                                         String defaultAddress1,
-                                        String defaultAddress2) {
+                                        String defaultAddress2,
+                                        String currentPassword,
+                                        String newPassword) {
         log.info("내 정보 수정 요청 - 사용자 ID: {}, 닉네임: {}, 우편번호: {}", userId, nickname, defaultZipcode);
 
         User user = userRepository.findById(userId)
@@ -85,6 +90,20 @@ public class UserService {
         }
         if (defaultAddress2 != null) {
             user.setDefaultAddress2(defaultAddress2);
+        }
+
+        // 비밀번호 업데이트
+        if (newPassword != null && !newPassword.isEmpty()) {
+            if (currentPassword == null || currentPassword.isEmpty()) {
+                throw new IllegalArgumentException("CURRENT_PASSWORD_REQUIRED: 비밀번호 변경 시 현재 비밀번호가 필요합니다.");
+            }
+            
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new IllegalArgumentException("INVALID_CURRENT_PASSWORD: 현재 비밀번호가 일치하지 않습니다.");
+            }
+            
+            user.setPassword(passwordEncoder.encode(newPassword));
+            log.info("비밀번호 변경 완료 - 사용자 ID: {}", userId);
         }
 
         // 변경 감지(Dirty Checking)에 의해 트랜잭션 종료 시 자동 저장

@@ -103,7 +103,9 @@ public class UserController {
                     requestDto.getPhoneNumber(),
                     requestDto.getDefaultZipcode(),
                     requestDto.getDefaultAddress1(),
-                    requestDto.getDefaultAddress2()
+                    requestDto.getDefaultAddress2(),
+                    requestDto.getCurrentPassword(),
+                    requestDto.getNewPassword()
             );
 
             log.info("사용자 프로필 수정 완료 - userId: {}", userId);
@@ -117,6 +119,14 @@ public class UserController {
                 errorResponse.put("code", "NICKNAME_ALREADY_EXISTS");
                 errorResponse.put("message", "이미 사용 중인 닉네임입니다.");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            } else if (e.getMessage().contains("CURRENT_PASSWORD_REQUIRED")) {
+                errorResponse.put("code", "CURRENT_PASSWORD_REQUIRED");
+                errorResponse.put("message", "비밀번호 변경 시 현재 비밀번호가 필요합니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            } else if (e.getMessage().contains("INVALID_CURRENT_PASSWORD")) {
+                errorResponse.put("code", "INVALID_CURRENT_PASSWORD");
+                errorResponse.put("message", "현재 비밀번호가 일치하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             } else {
                 errorResponse.put("code", "BAD_REQUEST");
                 errorResponse.put("message", e.getMessage());
