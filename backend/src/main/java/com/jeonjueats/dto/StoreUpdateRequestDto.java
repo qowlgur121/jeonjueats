@@ -75,4 +75,10 @@ public class StoreUpdateRequestDto {
      */
     @DecimalMin(value = "0", message = "배달팁은 0원 이상이어야 합니다.")
     private BigDecimal deliveryFee;
+    
+    /**
+     * 운영시간 (선택적)
+     */
+    @Size(max = 1000, message = "운영시간은 1000자 이하로 입력해주세요.")
+    private String operatingHours;
 } 

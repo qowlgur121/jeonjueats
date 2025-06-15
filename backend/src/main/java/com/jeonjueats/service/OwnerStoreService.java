@@ -59,6 +59,7 @@ public class OwnerStoreService {
         store.setStoreImageUrl(requestDto.getStoreImageUrl());
         store.setMinOrderAmount(requestDto.getMinOrderAmount());
         store.setDeliveryFee(requestDto.getDeliveryFee());
+        store.setOperatingHours(requestDto.getOperatingHours());
         
         // 3. 초기 운영 상태를 CLOSED로 설정 (요구사항)
         store.setStatus(StoreStatus.CLOSED);
@@ -195,6 +196,9 @@ public class OwnerStoreService {
         if (request.getDeliveryFee() != null) {
             store.setDeliveryFee(request.getDeliveryFee());
         }
+        if (request.getOperatingHours() != null) {
+            store.setOperatingHours(request.getOperatingHours());
+        }
         
         // @Transactional에 의해 자동으로 변경사항이 DB에 반영됨 (Dirty Checking)
         log.info("Store updated successfully: {}", storeId);
@@ -261,6 +265,15 @@ public class OwnerStoreService {
                 .createdAt(store.getCreatedAt())
                 .updatedAt(store.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void deleteStore(Long ownerId, Long storeId) {
+        Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
+                .orElseThrow(() -> new StoreNotFoundException("존재하지 않는 가게입니다."));
+        
+        validateStoreOwnership(store, ownerId);
+        storeRepository.delete(store);
     }
 
     /**

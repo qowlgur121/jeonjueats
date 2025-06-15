@@ -52,4 +52,7 @@ public class StoreCreateRequestDto {
     @NotNull(message = "배달비는 필수입니다")
     @DecimalMin(value = "0", message = "배달비는 0 이상이어야 합니다")
     private BigDecimal deliveryFee;
+
+    @Size(max = 1000, message = "운영시간은 1000자 이하여야 합니다")
+    private String operatingHours;
 } 

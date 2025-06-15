@@ -84,7 +84,7 @@ public class Store {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "operating_hours", length = 255)
+    @Column(name = "operating_hours", length = 1000)
     private String operatingHours;
 
     @Column(name = "average_rating", precision = 3, scale = 2)
