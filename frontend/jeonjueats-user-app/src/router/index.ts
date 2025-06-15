@@ -63,7 +63,16 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { title: '로그인' }
+      meta: { title: '로그인' },
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore()
+        // 이미 로그인된 사용자는 홈으로 리다이렉트
+        if (authStore.isAuthenticated) {
+          next({ name: 'home' })
+        } else {
+          next()
+        }
+      }
     },
     {
       path: '/signup',
@@ -101,8 +110,10 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth) {
     const authStore = useAuthStore()
     if (!authStore.isAuthenticated) {
-      // 인증되지 않은 사용자는 홈으로 이동 (모달에서 처리)
-      next({ name: 'home', query: { auth: 'required', redirect: to.fullPath } })
+      // 리다이렉트 경로 저장
+      authStore.setRedirectPath(to.fullPath)
+      // 로그인 페이지로 이동
+      next({ name: 'login' })
       return
     }
   }

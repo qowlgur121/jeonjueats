@@ -33,11 +33,29 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
   const isLoading = ref(false)
+  const redirectPath = ref<string | null>(null)
 
   // 계산된 속성
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const isUser = computed(() => user.value?.role === 'ROLE_USER')
   const isOwner = computed(() => user.value?.role === 'ROLE_OWNER')
+
+  // 리다이렉트 경로 설정
+  const setRedirectPath = (path: string): void => {
+    redirectPath.value = path
+  }
+
+  // 리다이렉트 경로 가져오기 및 초기화
+  const getAndClearRedirectPath = (): string | null => {
+    const path = redirectPath.value
+    redirectPath.value = null
+    return path
+  }
+
+  // 로그인이 필요한 작업 실행 전 인증 체크
+  const requireAuth = (): boolean => {
+    return isAuthenticated.value
+  }
 
   // 토큰을 localStorage에서 로드
   const loadTokenFromStorage = () => {
@@ -200,6 +218,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     isLoading,
+    redirectPath,
     // 계산된 속성
     isAuthenticated,
     isUser,
@@ -211,6 +230,9 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     validateToken,
     updateUser,
-    initialize
+    initialize,
+    setRedirectPath,
+    getAndClearRedirectPath,
+    requireAuth
   }
 })
