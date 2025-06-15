@@ -55,36 +55,41 @@ public class CartService {
         log.info("장바구니 메뉴 추가 시작 - 사용자: {}, 메뉴 ID: {}, 수량: {}", 
                 userId, request.getMenuId(), request.getQuantity());
 
-        // 1. 메뉴 존재 확인 및 조회
+        // 메뉴 존재 확인 및 조회
         Menu menu = menuRepository.findByIdAndIsDeletedFalse(request.getMenuId())
                 .orElseThrow(() -> new MenuNotFoundException("메뉴를 찾을 수 없습니다. ID: " + request.getMenuId()));
 
-        // 2. 메뉴가 속한 가게 조회
+        // 메뉴가 속한 가게 조회
         Store store = storeRepository.findByIdAndIsDeletedFalse(menu.getStoreId())
                 .orElseThrow(() -> new StoreNotFoundException("가게를 찾을 수 없습니다. ID: " + menu.getStoreId()));
 
-        // 3. 가게 영업 상태 확인 (보안: 프론트엔드 우회 방지)
+        // 가게 영업 상태 확인 (보안: 프론트엔드 우회 방지)
         if (store.getStatus() != StoreStatus.OPEN) {
             throw new InvalidCartOperationException("현재 영업하지 않는 가게입니다.");
+        }
+
+        // 메뉴 품절 상태 확인 (보안: 프론트엔드 우회 방지)
+        if (menu.getStatus() != com.jeonjueats.entity.MenuStatus.AVAILABLE) {
+            throw new InvalidCartOperationException("현재 품절된 메뉴입니다.");
         }
 
         log.info("메뉴 정보 확인 완료 - 메뉴: {}, 가게: {}, 가격: {}", 
                 menu.getName(), store.getName(), menu.getPrice());
 
-        // 4. 사용자 장바구니 조회 또는 생성
+        // 사용자 장바구니 조회 또는 생성
         Cart cart = getOrCreateUserCart(userId);
 
-        // 5. MVP 비즈니스 규칙: 한 번에 한 가게 메뉴만 담기 가능
+        // MVP 비즈니스 규칙: 한 번에 한 가게 메뉴만 담기 가능
         validateSingleStoreRule(cart, menu.getStoreId());
 
-        // 6. 장바구니가 비어있다면 현재 가게로 설정
+        // 장바구니가 비어있다면 현재 가게로 설정
         if (cart.isEmpty()) {
             cart.setStoreId(menu.getStoreId());
             cartRepository.save(cart);
             log.info("빈 장바구니에 가게 설정 완료 - 가게 ID: {}", menu.getStoreId());
         }
 
-        // 6. 이미 담긴 메뉴인지 확인 (수량 증가 vs 새로 추가)
+        // 이미 담긴 메뉴인지 확인 (수량 증가 vs 새로 추가)
         Optional<CartItem> existingItem = cartItemRepository.findByCartIdAndMenuId(cart.getId(), menu.getId());
         
         CartItem cartItem;
@@ -103,7 +108,7 @@ public class CartService {
 
         cartItem = cartItemRepository.save(cartItem);
 
-        // 7. 응답 DTO 생성
+        // 응답 DTO 생성
         CartItemResponseDto response = CartItemResponseDto.builder()
                 .cartItemId(cartItem.getId())
                 .menuId(menu.getId())

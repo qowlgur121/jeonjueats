@@ -4,7 +4,6 @@ import com.jeonjueats.dto.MenuResponseDto;
 import com.jeonjueats.dto.StoreDetailResponseDto;
 import com.jeonjueats.dto.StoreResponseDto;
 import com.jeonjueats.entity.Menu;
-import com.jeonjueats.entity.MenuStatus;
 import com.jeonjueats.entity.Store;
 import com.jeonjueats.entity.StoreStatus;
 import com.jeonjueats.exception.StoreNotFoundException;
@@ -92,10 +91,10 @@ public class StoreService {
 
     /**
      * 가게 상세 정보 및 메뉴 목록 조회
-     * 영업 상태에 관계없이 가게 상세 정보와 해당 가게의 판매 중인 메뉴를 함께 조회
+     * 영업 상태에 관계없이 가게 상세 정보와 해당 가게의 모든 메뉴를 함께 조회
      * 
      * @param storeId 조회할 가게 ID
-     * @return 가게 상세 정보와 메뉴 목록
+     * @return 가게 상세 정보와 메뉴 목록 (판매중 + 품절 포함)
      * @throws StoreNotFoundException 가게를 찾을 수 없는 경우
      */
     public StoreDetailResponseDto getStoreDetail(Long storeId) {
@@ -105,9 +104,8 @@ public class StoreService {
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> new StoreNotFoundException("가게를 찾을 수 없습니다."));
 
-        // 해당 가게의 판매 중인 메뉴 조회
-        List<Menu> menus = menuRepository.findByStoreIdAndStatusAndIsDeletedFalseOrderByCreatedAtDesc(
-                storeId, MenuStatus.AVAILABLE);
+        // 해당 가게의 모든 메뉴 조회 (판매중 + 품절 포함)
+        List<Menu> menus = menuRepository.findByStoreIdAndIsDeletedFalseOrderByCreatedAtDesc(storeId);
 
         log.info("가게 상세 정보 조회 완료 - 가게: {}, 메뉴 {}개", store.getName(), menus.size());
 

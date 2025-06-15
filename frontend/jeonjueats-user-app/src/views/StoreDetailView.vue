@@ -6,7 +6,7 @@ import { addCartItem, clearCart, type AddCartItemRequest } from '../api/cart'
 import { toggleWishlist, getWishlistStatus } from '../api/wishlist'
 import { useCartStore } from '../stores/cart'
 import { useAuthStore } from '../stores/auth'
-import { parseOperatingHours, getOperatingStatus } from '../utils/operatingHours'
+import { parseOperatingHours } from '../utils/operatingHours'
 import { getStoreOperatingStatus } from '@/utils/storeStatus'
 import MenuItemModal from '../components/MenuItemModal.vue'
 import AlertModal from '../components/AlertModal.vue'
@@ -116,6 +116,23 @@ const filteredMenuItems = computed(() => {
 
 // 메뉴 아이템 클릭
 const handleMenuClick = (menuItem: Menu) => {
+  // 우선순위 1: 영업 상태 체크 (영업중이 아니면 품절 여부와 관계없이 영업 안내)
+  if (store.value) {
+    const storeStatus = getStoreOperatingStatus(store.value)
+    if (!storeStatus.isOpen) {
+      alertMessage.value = `죄송합니다. ${store.value.name}은(는) 현재 영업중이 아닙니다.`
+      showOperatingHoursAlert.value = true
+      return
+    }
+  }
+  
+  // 우선순위 2: 영업중이지만 품절된 메뉴는 클릭 불가능
+  if (menuItem.status === 'SOLD_OUT') {
+    alertMessage.value = `죄송합니다. "${menuItem.name}"은(는) 현재 품절되었습니다.`
+    showOperatingHoursAlert.value = true
+    return
+  }
+  
   selectedMenuItem.value = menuItem
   isMenuModalVisible.value = true
 }
@@ -240,9 +257,10 @@ const formattedOperatingHours = computed(() => {
   return store.value?.operatingHours ? parseOperatingHours(store.value.operatingHours) : '운영시간 미정'
 })
 
-// 운영 상태
+// 운영 상태 (사장님 설정 + 운영시간 고려)
 const operatingStatus = computed(() => {
-  return store.value?.operatingHours ? getOperatingStatus(store.value.operatingHours) : { text: '운영시간 미정', isOpen: false }
+  if (!store.value) return { isOpen: false, displayStatus: '운영시간 미정', statusClass: 'closed' }
+  return getStoreOperatingStatus(store.value)
 })
 
 // 찜 상태 로드
@@ -369,9 +387,9 @@ const toggleWish = async () => {
                 {{ formattedOperatingHours }}
                 <span 
                   class="operating-status" 
-                  :class="{ 'open': operatingStatus.isOpen, 'closed': !operatingStatus.isOpen }"
+                  :class="operatingStatus.statusClass"
                 >
-                  {{ operatingStatus.text }}
+                  {{ operatingStatus.displayStatus }}
                 </span>
               </span>
             </div>
@@ -415,6 +433,7 @@ const toggleWish = async () => {
             v-for="menuItem in filteredMenuItems"
             :key="menuItem.menuId"
             class="menu-item"
+            :class="{ 'sold-out': menuItem.status === 'SOLD_OUT' }"
             @click="handleMenuClick(menuItem)"
           >
             <div class="menu-image-container">
@@ -764,6 +783,15 @@ const toggleWish = async () => {
 
 .menu-item:hover {
   background-color: #f9fafb;
+}
+
+.menu-item.sold-out {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.menu-item.sold-out:hover {
+  background-color: transparent;
 }
 
 .menu-image-container {

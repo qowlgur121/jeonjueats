@@ -259,8 +259,8 @@ onMounted(async () => {
     <!-- 메인 컨텐츠 -->
     <main class="main-content">
       <div class="page-header">
-        <div class="header-left">
-          <h2>주문 관리</h2>
+        <div class="page-title">
+          <h1>주문 관리</h1>
           <p class="page-subtitle">실시간 주문 현황을 확인하고 관리하세요</p>
         </div>
         
@@ -473,6 +473,10 @@ onMounted(async () => {
           <div class="detail-section">
             <h4>결제 정보</h4>
             <div class="detail-row">
+              <span class="detail-label">결제 방법</span>
+              <span class="detail-value">{{ selectedOrder?.paymentMethod || '정보 없음' }}</span>
+            </div>
+            <div class="detail-row">
               <span class="detail-label">메뉴 금액</span>
               <span class="detail-value">{{ formatCurrency(selectedOrder?.subtotalAmount || 0) }}</span>
             </div>
@@ -598,14 +602,14 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
-.header-left h2 {
+.page-title h1 {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 0.5rem 0;
 }
 
-.subtitle {
+.page-subtitle {
   color: #6b7280;
   margin: 0;
 }
