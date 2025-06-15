@@ -1,14 +1,34 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import BottomNavigation from './components/BottomNavigation.vue'
+import AuthModal from './components/AuthModal.vue'
 import { useAuthStore } from './stores/auth'
 
+const route = useRoute()
 const authStore = useAuthStore()
+const isAuthModalVisible = ref(false)
 
 // 앱 시작시 인증 상태 초기화
 onMounted(() => {
   authStore.initialize()
 })
+
+// 라우트 변경 감지하여 인증 모달 표시
+watch(
+  () => route.query.auth,
+  (authQuery) => {
+    if (authQuery === 'required') {
+      isAuthModalVisible.value = true
+    }
+  },
+  { immediate: true }
+)
+
+// 인증 모달 닫기
+const closeAuthModal = () => {
+  isAuthModalVisible.value = false
+}
 </script>
 
 <template>
@@ -44,6 +64,12 @@ onMounted(() => {
 
     <!-- 하단 네비게이션 -->
     <BottomNavigation />
+
+    <!-- 인증 모달 -->
+    <AuthModal 
+      v-model="isAuthModalVisible" 
+      @update:modelValue="closeAuthModal"
+    />
 
   </div>
 </template>
@@ -84,29 +110,17 @@ onMounted(() => {
 
 /* JeonjuEats 컬러풀 로고 */
 .logo-text {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-}
-
-.logo-char {
   font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  font-weight: bold;
+  font-family: 'Arial', sans-serif;
 }
 
-/* jeonju eats 색상 - jeo(갈색) + nju(컬러풀) + eats(갈색) */
-.c1 { color: #8B4513; } /* 갈색 - j, e, s */
-.c2 { color: #8B4513; } /* 갈색 - e, a */
-.c3 { color: #8B4513; } /* 갈색 - o, t */
-.c4 { color: #FF4500; } /* 주황 - n */
-.c5 { color: #FFD700; } /* 노랑 - j */
-.c6 { color: #32CD32; } /* 초록 - u */
-
-.logo-space {
-  font-size: 24px;
-  margin: 0 4px;
-}
+.logo-char.c1 { color: #8B4513; }
+.logo-char.c2 { color: #8B4513; }
+.logo-char.c3 { color: #8B4513; }
+.logo-char.c4 { color: #FF4500; }
+.logo-char.c5 { color: #FFD700; }
+.logo-char.c6 { color: #5DADE2; }
 
 /* 메인 콘텐츠 - 100% 너비 */
 .main {

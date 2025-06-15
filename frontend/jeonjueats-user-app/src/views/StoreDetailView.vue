@@ -5,7 +5,11 @@ import { getStore, type Store, type Menu, type StoreDetailResponse } from '../ap
 import { addCartItem, clearCart, type AddCartItemRequest } from '../api/cart'
 import { toggleWishlist, getWishlistStatus } from '../api/wishlist'
 import { useCartStore } from '../stores/cart'
+import { useAuthStore } from '../stores/auth'
+import { parseOperatingHours, getOperatingStatus } from '../utils/operatingHours'
+import { getStoreOperatingStatus } from '@/utils/storeStatus'
 import MenuItemModal from '../components/MenuItemModal.vue'
+import AlertModal from '../components/AlertModal.vue'
 
 // 라우터
 const route = useRoute()
@@ -31,15 +35,9 @@ const isAddingToCart = ref(false)
 const isWished = ref(false)
 const isTogglingWish = ref(false)
 
-// 메뉴 카테고리 (API에서 받은 메뉴들을 기반으로 동적 생성)
+// 메뉴 카테고리 (현재는 전체만 지원)
 const menuCategories = computed(() => {
-  const categories = ['전체']
-  // 실제로는 메뉴 데이터에서 카테고리를 추출하거나 별도 API로 가져와야 함
-  // MVP에서는 간단하게 처리
-  if (menus.value.length > 0) {
-    categories.push('추천메뉴')
-  }
-  return categories
+  return ['전체']
 })
 
 // 선택된 메뉴 아이템
@@ -122,12 +120,35 @@ const handleMenuClick = (menuItem: Menu) => {
   isMenuModalVisible.value = true
 }
 
+// 영업시간 알림 상태
+const showOperatingHoursAlert = ref(false)
+const alertMessage = ref('')
+
 // 장바구니에 추가
 const addToCart = async (menuItem: Menu, options: any = {}) => {
   console.log('StoreDetailView: addToCart 함수 호출됨')
   console.log('StoreDetailView: 메뉴 아이템:', menuItem)
   console.log('StoreDetailView: 옵션:', options)
   console.log('StoreDetailView: 가게 정보:', store.value)
+  
+  // 로그인 체크
+  const authStore = useAuthStore()
+  if (!authStore.requireAuth()) {
+    // 현재 페이지 경로를 저장하고 로그인 페이지로 이동
+    authStore.setRedirectPath(route.fullPath)
+    router.push('/login')
+    return
+  }
+
+  // 영업 상태 체크
+  if (store.value) {
+    const storeStatus = getStoreOperatingStatus(store.value)
+    if (!storeStatus.isOpen) {
+      alertMessage.value = `죄송합니다. ${store.value.name}은(는) 현재 영업중이 아닙니다.`
+      showOperatingHoursAlert.value = true
+      return
+    }
+  }
   
   if (!store.value) {
     console.error('StoreDetailView: 가게 정보가 없습니다')
@@ -214,6 +235,16 @@ const formatPrice = (price: number): string => {
   return price.toLocaleString() + '원'
 }
 
+// 운영시간 파싱
+const formattedOperatingHours = computed(() => {
+  return store.value?.operatingHours ? parseOperatingHours(store.value.operatingHours) : '운영시간 미정'
+})
+
+// 운영 상태
+const operatingStatus = computed(() => {
+  return store.value?.operatingHours ? getOperatingStatus(store.value.operatingHours) : { text: '운영시간 미정', isOpen: false }
+})
+
 // 찜 상태 로드
 const loadWishlistStatus = async () => {
   try {
@@ -235,6 +266,15 @@ const loadWishlistStatus = async () => {
 // 찜 토글
 const toggleWish = async () => {
   if (isTogglingWish.value) return
+  
+  // 로그인 체크
+  const authStore = useAuthStore()
+  if (!authStore.requireAuth()) {
+    // 현재 페이지 경로를 저장하고 로그인 페이지로 이동
+    authStore.setRedirectPath(route.fullPath)
+    router.push('/login')
+    return
+  }
   
   try {
     isTogglingWish.value = true
@@ -325,7 +365,15 @@ const toggleWish = async () => {
           <div class="store-details">
             <div class="detail-item">
               <span class="detail-icon">🕒</span>
-              <span class="detail-text">{{ store.operatingHours }}</span>
+              <span class="detail-text">
+                {{ formattedOperatingHours }}
+                <span 
+                  class="operating-status" 
+                  :class="{ 'open': operatingStatus.isOpen, 'closed': !operatingStatus.isOpen }"
+                >
+                  {{ operatingStatus.text }}
+                </span>
+              </span>
             </div>
             <div class="detail-item">
               <span class="detail-icon">🚚</span>
@@ -421,6 +469,16 @@ const toggleWish = async () => {
       :is-visible="isMenuModalVisible"
       @close="isMenuModalVisible = false"
       @add-to-cart="addToCart"
+    />
+
+    <!-- 영업시간 알림 모달 -->
+    <AlertModal
+      :is-visible="showOperatingHoursAlert"
+      title="영업시간 안내"
+      :message="alertMessage"
+      type="warning"
+      confirm-text="확인"
+      @close="showOperatingHoursAlert = false"
     />
 
   </div>
@@ -616,6 +674,25 @@ const toggleWish = async () => {
 
 .detail-icon {
   font-size: 16px;
+}
+
+/* 운영 상태 */
+.operating-status {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operating-status.open {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.operating-status.closed {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 /* 메뉴 카테고리 */

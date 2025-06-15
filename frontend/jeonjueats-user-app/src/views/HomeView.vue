@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import { getStores, type Store, type StorePageResponse } from '../api/stores'
-import { getCategories, type Category } from '../api/categories'
 import { useRouter } from 'vue-router'
+import { getStoreOperatingStatus } from '@/utils/storeStatus'
 
 // 상태 관리
 const stores = ref<Store[]>([])
@@ -151,10 +151,13 @@ const handleCategoryClick = async (categoryId: number) => {
   await loadStores(true) // 카테고리 변경 시 첫 페이지부터 다시 로드
 }
 
+
 // 가게 카드 클릭 핸들러
-const handleStoreClick = (storeId: number) => {
-  console.log('가게 클릭:', storeId)
-  router.push(`/stores/${storeId}`)
+const handleStoreClick = (store: Store) => {
+  console.log('가게 클릭:', store.storeId)
+  
+  // 영업 상태에 관계없이 상세페이지로 이동 허용
+  router.push(`/stores/${store.storeId}`)
 }
 
 // 가격 포맷팅
@@ -166,6 +169,21 @@ const formatPrice = (price: number): string => {
 const getDeliveryFeeText = (fee: number): string => {
   return fee === 0 ? '무료배달' : `배달비 ${formatPrice(fee)}`
 }
+
+// 가게 목록을 영업 상태에 따라 정렬 (영업중이 먼저, 영업종료가 나중)
+const sortedStores = computed(() => {
+  return [...stores.value].sort((a, b) => {
+    const aStatus = getStoreOperatingStatus(a)
+    const bStatus = getStoreOperatingStatus(b)
+    
+    // 영업 중인 가게가 먼저 오도록 정렬
+    if (aStatus.isOpen && !bStatus.isOpen) return -1
+    if (!aStatus.isOpen && bStatus.isOpen) return 1
+    
+    // 같은 상태면 원래 순서 유지
+    return 0
+  })
+})
 </script>
 
 <template>
@@ -247,10 +265,11 @@ const getDeliveryFeeText = (fee: number): string => {
         <!-- 가게 목록 -->
         <div v-else class="stores-grid">
           <div 
-            v-for="store in stores" 
+            v-for="store in sortedStores" 
             :key="store.storeId"
             class="store-card"
-            @click="handleStoreClick(store.storeId)"
+            :class="{ 'closed': !getStoreOperatingStatus(store).isOpen }"
+            @click="handleStoreClick(store)"
           >
             <!-- 가게 이미지 영역 -->
             <div class="store-image-container">
@@ -265,8 +284,8 @@ const getDeliveryFeeText = (fee: number): string => {
               </div>
               
               <!-- 운영 상태 뱃지 -->
-              <div class="operation-badge" :class="store.status.toLowerCase()">
-                {{ store.status === 'OPEN' ? '영업중' : '영업종료' }}
+              <div class="operation-badge" :class="getStoreOperatingStatus(store).statusClass">
+                {{ getStoreOperatingStatus(store).displayStatus }}
               </div>
               
               <!-- 배달 정보 오버레이 -->
@@ -311,12 +330,10 @@ const getDeliveryFeeText = (fee: number): string => {
             <div class="loading-spinner"></div>
             <span>더 많은 가게를 불러오는 중...</span>
           </div>
-          <div v-else-if="!hasMoreStores && stores.length > 0" class="no-more-stores">
-            모든 가게를 확인했습니다
-          </div>
         </div>
       </div>
     </section>
+
 
   </div>
 </template>
@@ -542,6 +559,26 @@ const getDeliveryFeeText = (fee: number): string => {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+/* 영업 종료된 가게 스타일 */
+.store-card.closed {
+  opacity: 0.6;
+  filter: grayscale(50%);
+  cursor: default;
+}
+
+.store-card.closed:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.store-card.closed .store-image {
+  filter: grayscale(100%) brightness(0.8);
+}
+
+.store-card.closed:hover .store-image {
+  transform: none;
+}
+
 /* 이미지 영역 */
 .store-image-container {
   position: relative;
@@ -688,6 +725,7 @@ const getDeliveryFeeText = (fee: number): string => {
   margin-bottom: 16px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
