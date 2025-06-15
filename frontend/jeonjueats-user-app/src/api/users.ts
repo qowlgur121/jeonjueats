@@ -19,6 +19,9 @@ export interface UserUpdateRequest {
   defaultZipcode?: string
   defaultAddress1?: string
   defaultAddress2?: string
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
 }
 
 // 사용자 정보 조회

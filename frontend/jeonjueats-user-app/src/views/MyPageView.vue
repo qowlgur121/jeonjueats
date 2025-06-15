@@ -22,16 +22,22 @@ const stats = ref({
 
 // 프로필 수정 모달
 const isEditModalVisible = ref(false)
-const editForm = ref<UserUpdateRequest>({
+const editForm = ref<ProfileUpdateForm>({
   nickname: '',
   phoneNumber: '',
   defaultZipcode: '',
   defaultAddress1: '',
-  defaultAddress2: ''
+  defaultAddress2: '',
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
 })
 
+// 상태 관리
+const errorMessage = ref('')
+const successMessage = ref('')
+
 const menuItems = [
-  { name: '프로필 수정', icon: '👤', route: '/profile', description: '개인정보 변경' },
   { name: '주문내역', icon: '📋', route: '/orders', description: '주문 및 배송 현황' },
   { name: '즐겨찾기', icon: '❤️', route: '/wishlist', description: '관심 매장 관리' }
 ]
@@ -114,7 +120,10 @@ const fillEditForm = () => {
       phoneNumber: user.value.phoneNumber || '',
       defaultZipcode: user.value.defaultZipcode || '',
       defaultAddress1: user.value.defaultAddress1 || '',
-      defaultAddress2: user.value.defaultAddress2 || ''
+      defaultAddress2: user.value.defaultAddress2 || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     }
     
     console.log('🔍 폼에 설정된 값:', editForm.value)
@@ -125,7 +134,10 @@ const fillEditForm = () => {
       phoneNumber: '',
       defaultZipcode: '',
       defaultAddress1: '',
-      defaultAddress2: ''
+      defaultAddress2: '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     }
   }
 }
@@ -134,13 +146,61 @@ const fillEditForm = () => {
 const saveProfile = async () => {
   try {
     isUpdating.value = true
+    errorMessage.value = ''
+    successMessage.value = ''
+    
+    // 유효성 검사 - 사장님 앱과 동일한 로직
+    if (!editForm.value.nickname.trim()) {
+      errorMessage.value = '닉네임을 입력해주세요.'
+      return
+    }
+    
+    if (!editForm.value.phoneNumber.trim()) {
+      errorMessage.value = '전화번호를 입력해주세요.'
+      return
+    }
+
+    // 비밀번호 변경이 요청된 경우 검증
+    if (editForm.value.newPassword || editForm.value.currentPassword || editForm.value.confirmPassword) {
+      if (!editForm.value.currentPassword) {
+        errorMessage.value = '현재 비밀번호를 입력해주세요.'
+        return
+      }
+      
+      if (!editForm.value.newPassword) {
+        errorMessage.value = '새 비밀번호를 입력해주세요.'
+        return
+      }
+      
+      if (editForm.value.newPassword !== editForm.value.confirmPassword) {
+        errorMessage.value = '새 비밀번호가 일치하지 않습니다.'
+        return
+      }
+      
+      if (editForm.value.newPassword.length < 8) {
+        errorMessage.value = '새 비밀번호는 8자 이상이어야 합니다.'
+        return
+      }
+      
+      const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/
+      if (!passwordRegex.test(editForm.value.newPassword)) {
+        errorMessage.value = '새 비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.'
+        return
+      }
+    }
+    
     console.log('MyPageView: 프로필 업데이트 요청:', editForm.value)
     
     const updatedUser = await updateUserProfile(editForm.value)
     console.log('MyPageView: 프로필 업데이트 성공:', updatedUser)
     
     user.value = updatedUser
-    isEditModalVisible.value = false
+    successMessage.value = '프로필이 성공적으로 업데이트되었습니다.'
+    
+    // 비밀번호 필드 초기화
+    editForm.value.currentPassword = ''
+    editForm.value.newPassword = ''
+    editForm.value.confirmPassword = ''
     
     // authStore의 사용자 정보도 업데이트
     if (authStore.user) {
@@ -152,9 +212,15 @@ const saveProfile = async () => {
       authStore.updateUser(updatedAuthUser)
     }
     
-  } catch (error) {
+    // 성공 메시지 3초 후 제거 및 모달 닫기
+    setTimeout(() => {
+      successMessage.value = ''
+      isEditModalVisible.value = false
+    }, 2000)
+    
+  } catch (error: any) {
     console.error('MyPageView: 프로필 업데이트 실패:', error)
-    alert('프로필 수정에 실패했습니다.')
+    errorMessage.value = error.response?.data?.message || '프로필 수정에 실패했습니다.'
   } finally {
     isUpdating.value = false
   }
@@ -185,93 +251,81 @@ const formatPrice = (price: number): string => {
   return price.toLocaleString() + '원'
 }
 
-// 전화번호 포맷팅 (자동 하이픈 추가)
-const formatPhoneNumber = (value: string) => {
-  // 숫자만 추출
+// 전화번호 포맷팅 (사장님 앱과 동일한 로직)
+const formatPhoneNumber = (value: string): string => {
   const numbers = value.replace(/[^\d]/g, '')
   
-  // 길이 제한 (최대 11자리)
-  const limitedNumbers = numbers.slice(0, 11)
-  
-  // 포맷팅
-  if (limitedNumbers.length <= 2) {
-    return limitedNumbers
-  }
-  
-  // 서울 지역번호 (02)
-  if (limitedNumbers.startsWith('02')) {
-    if (limitedNumbers.length <= 2) {
-      return limitedNumbers
-    } else if (limitedNumbers.length <= 5) {
-      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2)}`
-    } else if (limitedNumbers.length <= 9) {
-      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2, 5)}-${limitedNumbers.slice(5)}`
-    } else {
-      return `${limitedNumbers.slice(0, 2)}-${limitedNumbers.slice(2, 6)}-${limitedNumbers.slice(6)}`
-    }
-  }
-  
-  // 휴대폰 및 기타 지역번호 (010, 031, 032 등)
-  if (limitedNumbers.length <= 3) {
-    return limitedNumbers
-  } else if (limitedNumbers.length <= 6) {
-    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3)}`
-  } else if (limitedNumbers.length <= 10) {
-    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 6)}-${limitedNumbers.slice(6)}`
+  if (numbers.startsWith('02')) {
+    if (numbers.length <= 2) return numbers
+    if (numbers.length <= 6) return `${numbers.slice(0, 2)}-${numbers.slice(2)}`
+    return `${numbers.slice(0, 2)}-${numbers.slice(2, 6)}-${numbers.slice(6, 10)}`
   } else {
-    return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 7)}-${limitedNumbers.slice(7)}`
+    if (numbers.length <= 3) return numbers
+    if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`
+    return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`
   }
 }
 
-// 전화번호 입력 핸들러
+// 전화번호 입력 핸들러 (사장님 앱과 동일한 로직)
 const handlePhoneInput = (event: Event) => {
   const target = event.target as HTMLInputElement
-  const formatted = formatPhoneNumber(target.value)
-  editForm.value.phoneNumber = formatted
+  const cursorPosition = target.selectionStart
+  const oldValue = target.value
+  const newValue = formatPhoneNumber(target.value)
   
-  // 커서 위치 조정 (Vue의 양방향 바인딩 때문에 필요)
-  setTimeout(() => {
-    target.value = formatted
-  }, 0)
+  editForm.value.phoneNumber = newValue
+  
+  if (oldValue !== newValue) {
+    target.value = newValue
+    
+    const oldLength = oldValue.length
+    const newLength = newValue.length
+    const diff = newLength - oldLength
+    
+    if (cursorPosition !== null) {
+      const newCursorPosition = cursorPosition + diff
+      setTimeout(() => {
+        target.setSelectionRange(newCursorPosition, newCursorPosition)
+      }, 0)
+    }
+  }
 }
 
 
-// 카카오 주소 API
+// 카카오 주소 API (사장님 앱과 동일한 로직)
 const searchAddressForProfile = () => {
-  new (window as any).daum.Postcode({
-    oncomplete: function(data: any) {
-      let fullAddress = data.address;
-      let extraAddress = '';
+  setTimeout(() => {
+    const script = document.createElement('script')
+    script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+    script.onload = () => {
+      new (window as any).daum.Postcode({
+        oncomplete: function(data: any) {
+          editForm.value.defaultZipcode = data.zonecode
+          editForm.value.defaultAddress1 = data.address
+          
+          // 상세 주소 입력 필드로 포커스 이동
+          setTimeout(() => {
+            const detailAddressInput = document.querySelector('.modal-content input[placeholder*="상세"]') as HTMLInputElement;
+            if (detailAddressInput) {
+              detailAddressInput.focus();
+            }
+          }, 100);
+        }
+      }).open()
+    }
+    document.head.appendChild(script)
+  }, 100)
+}
 
-      if(data.userSelectedType === 'R'){
-        if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
-          extraAddress += data.bname;
-        }
-        if(data.buildingName !== '' && data.apartment === 'Y'){
-          extraAddress += (extraAddress !== '' ? ', ' + data.buildingName : data.buildingName);
-        }
-        if(extraAddress !== ''){
-          extraAddress = ' (' + extraAddress + ')';
-        }
-        fullAddress += extraAddress;
-      }
-
-      // 프로필 수정 폼에 주소 정보 입력
-      editForm.value.defaultZipcode = data.zonecode;
-      editForm.value.defaultAddress1 = fullAddress;
-      
-      // 상세 주소 입력 필드로 포커스 이동
-      setTimeout(() => {
-        const detailAddressInput = document.querySelector('.modal-content input[placeholder*="상세주소"]') as HTMLInputElement;
-        if (detailAddressInput) {
-          detailAddressInput.focus();
-        }
-      }, 100);
-    },
-    width: '100%',
-    height: '100%',
-    maxSuggestItems: 10
-  }).open();
+// 편집 취소 (사장님 앱과 동일한 로직)
+const cancelEdit = () => {
+  isEditModalVisible.value = false
+  if (user.value) {
+    fillEditForm() // 기존 값으로 복원
+  }
+  // 메시지 초기화
+  errorMessage.value = ''
+  successMessage.value = ''
 }
 </script>
 
@@ -350,7 +404,7 @@ const searchAddressForProfile = () => {
             
             <div class="menu-list">
               <router-link 
-                v-for="(item, index) in menuItems" 
+                v-for="item in menuItems" 
                 :key="item.name"
                 :to="item.route"
                 class="menu-item"
@@ -380,9 +434,6 @@ const searchAddressForProfile = () => {
               <span>로그아웃</span>
             </button>
             
-            <div class="app-info">
-              <p class="app-version">JeonjuEats v1.0.0</p>
-            </div>
           </div>
         </div>
       </section>
@@ -390,11 +441,20 @@ const searchAddressForProfile = () => {
     </div>
 
     <!-- 프로필 수정 모달 -->
-    <div v-if="isEditModalVisible" class="modal-overlay" @click="isEditModalVisible = false">
+    <div v-if="isEditModalVisible" class="modal-overlay" @click="cancelEdit">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>프로필 수정</h3>
-          <button @click="isEditModalVisible = false" class="close-btn">×</button>
+          <button @click="cancelEdit" class="close-btn">×</button>
+        </div>
+        
+        <!-- 성공/에러 메시지 -->
+        <div v-if="successMessage" class="alert alert-success">
+          {{ successMessage }}
+        </div>
+        
+        <div v-if="errorMessage" class="alert alert-error">
+          {{ errorMessage }}
         </div>
         
         <form @submit.prevent="saveProfile" class="edit-form">
@@ -446,9 +506,47 @@ const searchAddressForProfile = () => {
               placeholder="상세 주소를 입력하세요"
             >
           </div>
+
+          <!-- 비밀번호 변경 섹션 -->
+          <div class="password-section">
+            <h4 class="password-title">비밀번호 변경</h4>
+            <p class="password-description">비밀번호를 변경하지 않으려면 비워두세요.</p>
+            
+            <div class="form-group">
+              <label>현재 비밀번호</label>
+              <input 
+                :value="editForm.currentPassword" 
+                @input="(e) => editForm.currentPassword = (e.target as HTMLInputElement).value"
+                type="password" 
+                placeholder="현재 비밀번호 (변경 시에만 입력)"
+              >
+            </div>
+
+            <div class="form-group">
+              <label>새 비밀번호</label>
+              <input 
+                :value="editForm.newPassword" 
+                @input="(e) => editForm.newPassword = (e.target as HTMLInputElement).value"
+                type="password" 
+                placeholder="새 비밀번호 (변경 시에만 입력)"
+              >
+            </div>
+
+            <div class="form-group">
+              <label>새 비밀번호 확인</label>
+              <input 
+                :value="editForm.confirmPassword" 
+                @input="(e) => editForm.confirmPassword = (e.target as HTMLInputElement).value"
+                type="password" 
+                placeholder="새 비밀번호 확인"
+              >
+            </div>
+            
+            <p class="form-help">영문, 숫자, 특수문자 포함 8자 이상</p>
+          </div>
           
           <div class="form-actions">
-            <button type="button" @click="isEditModalVisible = false" class="cancel-btn">
+            <button type="button" @click="cancelEdit" class="cancel-btn">
               취소
             </button>
             <button type="submit" :disabled="isUpdating" class="save-btn">
@@ -761,16 +859,6 @@ const searchAddressForProfile = () => {
   font-size: 16px;
 }
 
-.app-info {
-  padding-top: 2rem;
-  border-top: 1px solid #f3f4f6;
-}
-
-.app-version {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
 
 /* 로딩 상태 */
 .loading-container {
@@ -822,8 +910,10 @@ const searchAddressForProfile = () => {
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
-  overflow: hidden;
+  overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -832,6 +922,7 @@ const searchAddressForProfile = () => {
   align-items: center;
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -866,6 +957,8 @@ const searchAddressForProfile = () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .form-group {
@@ -960,6 +1053,52 @@ const searchAddressForProfile = () => {
   cursor: not-allowed;
 }
 
+/* 알림 메시지 스타일 */
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* 비밀번호 섹션 스타일 */
+.password-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.password-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.password-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.form-help {
+  margin-top: 0.25rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .section-container {
@@ -988,6 +1127,12 @@ const searchAddressForProfile = () => {
   
   .modal-overlay {
     padding: 0.5rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  
+  .modal-content {
+    max-height: 85vh;
   }
   
   .modal-header {
