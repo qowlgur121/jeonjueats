@@ -14,17 +14,17 @@ export interface Menu {
   updatedAt: string
 }
 
-// 메뉴 생성 요청 타입
+// 메뉴 생성 요청 타입 (백엔드 DTO 맞춤)
 export interface MenuCreateRequest {
-  name: string
+  menuName: string
   description: string
   price: number
   menuImageUrl?: string
 }
 
-// 메뉴 수정 요청 타입
+// 메뉴 수정 요청 타입 (백엔드 DTO 맞춤)
 export interface MenuUpdateRequest {
-  name?: string
+  menuName?: string
   description?: string
   price?: number
   menuImageUrl?: string
@@ -32,8 +32,9 @@ export interface MenuUpdateRequest {
 
 // 가게 메뉴 목록 조회
 export const getStoreMenus = async (storeId: number): Promise<Menu[]> => {
-  const response = await apiClient.get(`/api/owner/stores/${storeId}/menus`)
-  return response.data
+  const response = await apiClient.get(`/api/owner/stores/${storeId}/menus?size=100`)
+  // 백엔드가 페이징된 응답을 보내므로 content 배열을 반환
+  return response.data.content || response.data
 }
 
 // 메뉴 생성

@@ -74,8 +74,13 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user')
-      // TODO: 로그인 페이지로 리다이렉트 구현
-      console.error('인증이 필요합니다')
+      
+      // 로그인 페이지로 리다이렉트
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+      
+      console.error('인증이 만료되었습니다. 로그인 페이지로 이동합니다.')
     }
     
     // 서버 에러 처리
