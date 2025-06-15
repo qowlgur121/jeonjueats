@@ -1,20 +1,64 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 import * as storesApi from '../api/stores'
+import apiClient from '../api/client'
+
+interface Store {
+  storeId: number
+  name: string
+  categoryId: number
+  categoryName: string
+  status: string
+  storeImageUrl: string | null
+  description: string
+  address1: string
+  address2: string
+  zipcode: string
+  phoneNumber: string
+  minOrderAmount: number
+  deliveryFee: number
+  averageRating: number
+  reviewCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+interface DashboardStats {
+  todayOrders: number
+  todaySales: number
+  weeklyOrders: number
+  weeklySales: number
+  pendingOrders: number
+  completedOrders: number
+}
 
 const router = useRouter()
-const authStore = useAuthStore()
 
-const stores = ref<any[]>([])
+const stores = ref<Store[]>([])
+const selectedStore = ref<Store | null>(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
+const dashboardStats = ref<DashboardStats>({
+  todayOrders: 0,
+  todaySales: 0,
+  weeklyOrders: 0,
+  weeklySales: 0,
+  pendingOrders: 0,
+  completedOrders: 0
+})
 
 const loadStores = async () => {
   try {
     isLoading.value = true
-    stores.value = await storesApi.getOwnerStores()
+    errorMessage.value = ''
+    
+    const response = await storesApi.getOwnerStores()
+    stores.value = response
+    
+    if (stores.value.length > 0) {
+      selectedStore.value = stores.value[0]
+    }
   } catch (error: any) {
     console.error('가게 목록 조회 실패:', error)
     errorMessage.value = '가게 목록을 불러올 수 없습니다.'
@@ -23,358 +67,288 @@ const loadStores = async () => {
   }
 }
 
-const handleLogout = async () => {
+const loadDashboardStats = async (storeId: number) => {
   try {
-    await authStore.logout()
-    router.push('/')
-  } catch (error) {
-    console.error('로그아웃 실패:', error)
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - 7)
+    
+    // 전체 주문 조회 (최근 주 단위)
+    const ordersResponse = await apiClient.get(`/api/owner/stores/${storeId}/orders`, {
+      params: {
+        size: 100 // 최근 100건 조회
+      }
+    })
+    
+    const orders = ordersResponse.data.content || []
+    
+    // 오늘 날짜 기준으로 필터링
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+    
+    let todayOrders = 0
+    let todaySales = 0
+    let weeklyOrders = 0
+    let weeklySales = 0
+    let pendingOrders = 0
+    let completedOrders = 0
+    
+    orders.forEach((order: any) => {
+      const orderDate = new Date(order.createdAt)
+      const totalAmount = order.totalAmount || 0
+      
+      // 주간 통계
+      if (orderDate >= weekStart) {
+        weeklyOrders++
+        weeklySales += totalAmount
+      }
+      
+      // 오늘 통계
+      if (orderDate >= todayStart) {
+        todayOrders++
+        todaySales += totalAmount
+      }
+      
+      // 주문 상태별 통계
+      if (order.status === 'PENDING' || order.status === 'ACCEPTED') {
+        pendingOrders++
+      } else if (order.status === 'COMPLETED') {
+        completedOrders++
+      }
+    })
+    
+    dashboardStats.value = {
+      todayOrders,
+      todaySales,
+      weeklyOrders,
+      weeklySales,
+      pendingOrders,
+      completedOrders
+    }
+  } catch (error: any) {
+    console.error('대시보드 통계 조회 실패:', error)
+    // 에러 시 기본값 유지
   }
 }
 
-const goToStores = () => {
-  router.push('/stores')
+const selectStore = (store: Store) => {
+  selectedStore.value = store
 }
 
-const goToStoreMenus = (storeId: number) => {
-  router.push(`/stores/${storeId}/menus`)
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('ko-KR', {
+    style: 'currency',
+    currency: 'KRW'
+  }).format(amount)
 }
 
-const goToStoreOrders = (storeId: number) => {
-  router.push(`/stores/${storeId}/orders`)
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat('ko-KR').format(num)
 }
 
-onMounted(() => {
-  loadStores()
+
+
+// 선택된 가게가 변경될 때마다 통계 다시 로드
+watch(selectedStore, (newStore) => {
+  if (newStore?.storeId) {
+    loadDashboardStats(newStore.storeId)
+  }
+}, { immediate: false })
+
+onMounted(async () => {
+  await loadStores()
+  // 첫 번째 가게가 선택되면 자동으로 통계 로드
+  if (selectedStore.value?.storeId) {
+    await loadDashboardStats(selectedStore.value.storeId)
+  }
 })
 </script>
 
 <template>
   <div class="dashboard-page">
-    <!-- 헤더 -->
-    <header class="dashboard-header">
-      <div class="container">
-        <div class="header-left">
-          <div class="logo">전주이츠 사장님</div>
-        </div>
-        <div class="header-right">
-          <div class="user-info">
-            <span>{{ authStore.user?.nickname }}님</span>
-          </div>
-          <button @click="handleLogout" class="btn-logout">
-            로그아웃
-          </button>
-        </div>
-      </div>
-    </header>
-
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
-      <div class="container">
-        <!-- 환영 섹션 -->
-        <section class="welcome-section">
-          <h1 class="welcome-title">
-            안녕하세요, {{ authStore.user?.nickname }} 사장님!
-          </h1>
-          <p class="welcome-description">
-            오늘도 좋은 하루 되세요. 가게 운영을 도와드리겠습니다.
-          </p>
-        </section>
+      <div v-if="isLoading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>가게 정보를 불러오는 중...</p>
+      </div>
 
-        <!-- 빠른 액션 -->
-        <section class="quick-actions">
-          <div class="action-cards">
-            <div class="action-card" @click="goToStores">
-              <div class="card-icon">🏪</div>
-              <h3 class="card-title">가게 관리</h3>
-              <p class="card-description">가게 정보 수정, 운영상태 변경</p>
-            </div>
-            
-            <div class="action-card" @click="router.push('/profile')">
-              <div class="card-icon">👤</div>
-              <h3 class="card-title">프로필</h3>
-              <p class="card-description">사장님 정보 관리</p>
-            </div>
-          </div>
-        </section>
+      <div v-else-if="errorMessage" class="error-state">
+        <p>{{ errorMessage }}</p>
+        <button @click="loadStores" class="btn-retry">다시 시도</button>
+      </div>
 
-        <!-- 내 가게 목록 -->
-        <section class="stores-section">
-          <div class="section-header">
-            <h2 class="section-title">내 가게</h2>
-            <button @click="goToStores" class="btn-add-store">
-              가게 추가
-            </button>
-          </div>
+      <div v-else-if="stores.length === 0" class="empty-state">
+        <div class="empty-content">
+          <h3>등록된 가게가 없습니다</h3>
+          <p>첫 번째 가게를 등록하고 운영을 시작해보세요</p>
+          <button @click="router.push('/stores')" class="btn-primary">가게 등록하기</button>
+        </div>
+      </div>
 
-          <div v-if="isLoading" class="loading">
-            가게 정보를 불러오는 중...
-          </div>
-
-          <div v-else-if="errorMessage" class="error-message">
-            {{ errorMessage }}
-          </div>
-
-          <div v-else-if="stores.length === 0" class="empty-state">
-            <div class="empty-icon">🏪</div>
-            <h3>등록된 가게가 없습니다</h3>
-            <p>첫 번째 가게를 등록해보세요!</p>
-            <button @click="goToStores" class="btn-empty-action">
-              가게 등록하기
-            </button>
-          </div>
-
-          <div v-else class="stores-grid">
-            <div 
-              v-for="store in stores" 
-              :key="store.id" 
-              class="store-card"
+      <div v-else class="dashboard-content">
+        <!-- 가게 선택기 -->
+        <div class="store-selector">
+          <h2 class="section-title">가게 선택</h2>
+          <div class="store-select-grid">
+            <button
+              v-for="store in stores"
+              :key="store.storeId"
+              @click="selectStore(store)"
+              class="store-select-item"
+              :class="{ active: selectedStore?.storeId === store.storeId }"
             >
               <div class="store-image">
-                <img 
-                  v-if="store.storeImageUrl" 
-                  :src="store.storeImageUrl" 
-                  :alt="store.name"
-                >
+                <img v-if="store.storeImageUrl" :src="store.storeImageUrl" :alt="store.name">
                 <div v-else class="store-placeholder">🏪</div>
               </div>
-              
               <div class="store-info">
-                <div class="store-header">
-                  <h3 class="store-name">{{ store.name }}</h3>
-                  <span 
-                    class="store-status"
-                    :class="{ 'open': store.status === 'OPEN', 'closed': store.status === 'CLOSED' }"
-                  >
-                    {{ store.status === 'OPEN' ? '영업중' : '영업종료' }}
-                  </span>
-                </div>
-                
-                <p class="store-category">{{ store.categoryName }}</p>
-                <p class="store-description">{{ store.description }}</p>
-                
-                <div class="store-actions">
-                  <button 
-                    @click="goToStoreMenus(store.id)"
-                    class="btn-action"
-                  >
-                    메뉴 관리
-                  </button>
-                  <button 
-                    @click="goToStoreOrders(store.id)"
-                    class="btn-action"
-                  >
-                    주문 관리
-                  </button>
-                </div>
+                <h4>{{ store.name }}</h4>
+                <p>{{ store.categoryName }}</p>
+                <span class="status" :class="store.status.toLowerCase()">
+                  {{ store.status === 'OPEN' ? '영업중' : '영업종료' }}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 선택된 가게의 대시보드 -->
+        <div v-if="selectedStore" class="dashboard-main">
+          <!-- 매출 요약 -->
+          <section class="revenue-section">
+            <h2 class="section-title">매출 현황</h2>
+            <div class="revenue-cards">
+              <div class="revenue-card">
+                <div class="revenue-label">오늘 매출</div>
+                <div class="revenue-amount">{{ formatCurrency(dashboardStats.todaySales) }}</div>
+                <div class="revenue-orders">{{ dashboardStats.todayOrders }}건 주문</div>
+              </div>
+              <div class="revenue-card">
+                <div class="revenue-label">이번 주 매출</div>
+                <div class="revenue-amount">{{ formatCurrency(dashboardStats.weeklySales) }}</div>
+                <div class="revenue-orders">{{ dashboardStats.weeklyOrders }}건 주문</div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          <!-- 주문 현황 -->
+          <section class="orders-section">
+            <h2 class="section-title">주문 현황</h2>
+            <div class="orders-summary">
+              <div class="order-status-card pending">
+                <div class="status-number">{{ dashboardStats.pendingOrders }}</div>
+                <div class="status-label">처리 대기</div>
+              </div>
+              <div class="order-status-card completed">
+                <div class="status-number">{{ dashboardStats.completedOrders }}</div>
+                <div class="status-label">완료된 주문</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 빠른 액션 -->
+          <section class="quick-actions">
+            <h2 class="section-title">빠른 작업</h2>
+            <div class="action-grid">
+              <button @click="router.push('/menus')" class="action-btn">
+                <span class="action-icon">📋</span>
+                <span class="action-text">메뉴 관리</span>
+              </button>
+              <button @click="router.push('/orders')" class="action-btn">
+                <span class="action-icon">📦</span>
+                <span class="action-text">주문 관리</span>
+              </button>
+              <button @click="router.push('/stores')" class="action-btn">
+                <span class="action-icon">⚙️</span>
+                <span class="action-text">가게 설정</span>
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   </div>
 </template>
 
 <style scoped>
+/* 전체 페이지 */
 .dashboard-page {
+  width: 100%;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f8f9fa;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* 헤더 */
-.dashboard-header {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 16px 0;
-}
-
-.dashboard-header .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1e40af;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-info span {
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.btn-logout {
-  padding: 8px 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #64748b;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-logout:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
 
 /* 메인 콘텐츠 */
 .main-content {
-  padding: 32px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
 }
 
-/* 환영 섹션 */
-.welcome-section {
+/* 상태 */
+.loading-state {
   text-align: center;
-  margin-bottom: 40px;
+  padding: 4rem 2rem;
 }
 
-.welcome-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 12px;
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
 }
 
-.welcome-description {
-  font-size: 16px;
-  color: #64748b;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* 빠른 액션 */
-.quick-actions {
-  margin-bottom: 48px;
-}
-
-.action-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.action-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
+.error-state {
   text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e2e8f0;
-}
-
-.action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.card-description {
-  font-size: 14px;
-  color: #64748b;
-}
-
-/* 가게 섹션 */
-.stores-section {
-  margin-bottom: 48px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.section-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.btn-add-store {
-  padding: 12px 24px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-add-store:hover {
-  background: #2563eb;
-}
-
-/* 로딩 & 에러 */
-.loading,
-.error-message {
-  text-align: center;
-  padding: 40px;
-  color: #64748b;
-}
-
-.error-message {
+  padding: 4rem 2rem;
   color: #dc2626;
 }
 
-/* 빈 상태 */
+.btn-retry {
+  padding: 8px 16px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
 .empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.empty-content {
   text-align: center;
-  padding: 60px 20px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
 }
 
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.empty-state h3 {
-  font-size: 20px;
+.empty-content h3 {
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #1f2937;
   margin-bottom: 8px;
 }
 
-.empty-state p {
-  font-size: 14px;
-  color: #64748b;
+.empty-content p {
+  color: #6b7280;
   margin-bottom: 24px;
 }
 
-.btn-empty-action {
+.btn-primary {
   padding: 12px 24px;
   background: #3b82f6;
   color: white;
@@ -386,37 +360,77 @@ onMounted(() => {
   transition: background-color 0.2s;
 }
 
-.btn-empty-action:hover {
+.btn-primary:hover {
   background: #2563eb;
 }
 
-/* 가게 그리드 */
-.stores-grid {
+/* 대시보드 콘텐츠 */
+.dashboard-content {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
 }
 
-.store-card {
+/* 가게 선택기 */
+.store-selector {
   background: white;
   border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  position: sticky;
+  top: 150px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
 }
 
-.store-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.store-select-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.store-select-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.store-select-item:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.store-select-item.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
 }
 
 .store-image {
-  height: 160px;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: #f3f4f6;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .store-image img {
@@ -426,93 +440,242 @@ onMounted(() => {
 }
 
 .store-placeholder {
-  font-size: 48px;
-  color: #cbd5e1;
+  font-size: 20px;
+  color: #d1d5db;
 }
 
-.store-info {
-  padding: 20px;
-}
-
-.store-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.store-name {
-  font-size: 18px;
+.store-info h4 {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
 }
 
-.store-status {
-  padding: 4px 8px;
+.store-info p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.status {
+  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.store-status.open {
-  background: #dcfce7;
-  color: #166534;
+.status.open {
+  background: #d1fae5;
+  color: #065f46;
 }
 
-.store-status.closed {
+.status.closed {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.store-category {
-  font-size: 12px;
+/* 대시보드 메인 */
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 매출 섹션 */
+.revenue-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.revenue-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.revenue-card {
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.revenue-label {
+  font-size: 14px;
   color: #64748b;
   margin-bottom: 8px;
 }
 
-.store-description {
-  font-size: 14px;
-  color: #64748b;
-  margin-bottom: 16px;
-  line-height: 1.5;
+.revenue-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
 }
 
-.store-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-action {
-  flex: 1;
-  padding: 8px 12px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #64748b;
+.revenue-orders {
   font-size: 12px;
+  color: #64748b;
+}
+
+/* 주문 섹션 */
+.orders-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.orders-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.order-status-card {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.order-status-card.pending {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.order-status-card.completed {
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+.status-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.status-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 빠른 액션 */
+.quick-actions {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 1.5rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-action:hover {
-  background: #e2e8f0;
-  color: #475569;
+.action-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.action-icon {
+  font-size: 24px;
+}
+
+.action-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
 }
 
 /* 반응형 */
-@media (max-width: 768px) {
-  .welcome-title {
-    font-size: 24px;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-  
-  .stores-grid {
+@media (max-width: 1024px) {
+  .dashboard-content {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .store-selector {
+    position: static;
+  }
+  
+  .store-select-grid {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 8px;
+  }
+  
+  .store-select-item {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container,
+  .nav-container,
+  .main-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .nav-menu {
+    overflow-x: auto;
+  }
+  
+  .nav-item {
+    white-space: nowrap;
+    padding: 12px 16px;
+  }
+  
+  .revenue-cards,
+  .orders-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    height: 56px;
+  }
+  
+  .logo-char {
+    font-size: 20px;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .store-select-grid {
+    flex-direction: column;
+  }
+  
+  .store-select-item {
+    min-width: auto;
   }
 }
 </style>
