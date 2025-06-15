@@ -150,12 +150,12 @@ const saveProfile = async () => {
     successMessage.value = ''
     
     // 유효성 검사 - 사장님 앱과 동일한 로직
-    if (!editForm.value.nickname.trim()) {
+    if (!editForm.value.nickname?.trim()) {
       errorMessage.value = '닉네임을 입력해주세요.'
       return
     }
     
-    if (!editForm.value.phoneNumber.trim()) {
+    if (!editForm.value.phoneNumber?.trim()) {
       errorMessage.value = '전화번호를 입력해주세요.'
       return
     }
