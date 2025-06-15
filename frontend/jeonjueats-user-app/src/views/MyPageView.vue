@@ -22,7 +22,7 @@ const stats = ref({
 
 // 프로필 수정 모달
 const isEditModalVisible = ref(false)
-const editForm = ref<ProfileUpdateForm>({
+const editForm = ref<UserUpdateRequest>({
   nickname: '',
   phoneNumber: '',
   defaultZipcode: '',
