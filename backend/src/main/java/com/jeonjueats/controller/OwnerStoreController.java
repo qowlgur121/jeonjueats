@@ -152,6 +152,14 @@ public class OwnerStoreController {
         return ResponseEntity.ok(updatedStore);
     }
 
+    @DeleteMapping("/stores/{storeId}")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
+    public ResponseEntity<Void> deleteStore(@PathVariable Long storeId, HttpServletRequest request) {
+        Long ownerId = getCurrentUserId(request);
+        ownerStoreService.deleteStore(ownerId, storeId);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * JWT 토큰에서 현재 사용자 ID 추출
      * Authorization 헤더의 Bearer 토큰을 파싱하여 사용자 ID를 반환

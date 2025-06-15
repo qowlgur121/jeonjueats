@@ -67,11 +67,16 @@ public class OrderService {
             throw new InvalidCartOperationException("장바구니가 비어있어 주문할 수 없습니다.");
         }
 
-        // 3. 가게 정보 조회
+        // 가게 정보 조회
         Store store = storeRepository.findByIdAndIsDeletedFalse(cart.getStoreId())
                 .orElseThrow(() -> new StoreNotFoundException("가게를 찾을 수 없습니다."));
 
-        // 4. 주문 금액 계산
+        // 가게 영업 상태 확인 (보안: 프론트엔드 우회 방지)
+        if (store.getStatus() != StoreStatus.OPEN) {
+            throw new InvalidCartOperationException("현재 영업하지 않는 가게입니다.");
+        }
+
+        // 주문 금액 계산
         OrderCalculation calculation = calculateOrderTotals(cartItems);
 
         log.info("주문 금액 계산 완료 - 상품 총액: {}, 배달비: {}, 총 금액: {}", 

@@ -31,4 +31,17 @@ public class SignupRequestDto {
     @NotBlank(message = "역할은 필수입니다")
     @Pattern(regexp = "ROLE_USER|ROLE_OWNER", message = "역할은 ROLE_USER 또는 ROLE_OWNER여야 합니다")
     private String role;
+    
+    @NotBlank(message = "전화번호는 필수입니다")
+    @Pattern(regexp = "^\\d{2,3}-\\d{3,4}-\\d{4}$", message = "올바른 전화번호 형식이 아닙니다")
+    private String phoneNumber;
+    
+    @NotBlank(message = "우편번호는 필수입니다")
+    private String zipcode;
+    
+    @NotBlank(message = "기본 주소는 필수입니다")
+    private String address1;
+    
+    @NotBlank(message = "상세 주소는 필수입니다")
+    private String address2;
 } 

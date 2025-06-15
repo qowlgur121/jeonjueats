@@ -136,12 +136,11 @@ public class ImageService {
     }
 
     /**
-     * 업로드 디렉토리 생성 (도메인별 + 날짜별 구조)
+     * 업로드 디렉토리 생성 (기존 images 폴더에 저장)
      */
     private Path createUploadDirectory(String domain) throws IOException {
-        // 도메인별 + 날짜별 폴더 구조: uploads/stores/2024/01/15/
-        String dateFolder = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        Path uploadPath = Paths.get(uploadDirectory, domain.toLowerCase(), dateFolder);
+        // 기존 images 폴더 구조에 맞춤: uploads/images/
+        Path uploadPath = Paths.get(uploadDirectory, "images");
 
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
@@ -173,7 +172,7 @@ public class ImageService {
      * 웹에서 접근 가능한 이미지 URL 생성
      */
     private String generateImageUrl(String domain, String filename) {
-        String dateFolder = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        return String.format("%s/api/images/%s/%s/%s", baseUrl, domain.toLowerCase(), dateFolder, filename);
+        // 상대 URL로 반환하여 배포 환경에서도 동작하도록 함
+        return String.format("/api/images/%s", filename);
     }
 } 

@@ -8,6 +8,7 @@ import com.jeonjueats.entity.Cart;
 import com.jeonjueats.entity.CartItem;
 import com.jeonjueats.entity.Menu;
 import com.jeonjueats.entity.Store;
+import com.jeonjueats.entity.StoreStatus;
 import com.jeonjueats.exception.CartNotFoundException;
 import com.jeonjueats.exception.InvalidCartOperationException;
 import com.jeonjueats.exception.MenuNotFoundException;
@@ -62,16 +63,21 @@ public class CartService {
         Store store = storeRepository.findByIdAndIsDeletedFalse(menu.getStoreId())
                 .orElseThrow(() -> new StoreNotFoundException("가게를 찾을 수 없습니다. ID: " + menu.getStoreId()));
 
+        // 3. 가게 영업 상태 확인 (보안: 프론트엔드 우회 방지)
+        if (store.getStatus() != StoreStatus.OPEN) {
+            throw new InvalidCartOperationException("현재 영업하지 않는 가게입니다.");
+        }
+
         log.info("메뉴 정보 확인 완료 - 메뉴: {}, 가게: {}, 가격: {}", 
                 menu.getName(), store.getName(), menu.getPrice());
 
-        // 3. 사용자 장바구니 조회 또는 생성
+        // 4. 사용자 장바구니 조회 또는 생성
         Cart cart = getOrCreateUserCart(userId);
 
-        // 4. MVP 비즈니스 규칙: 한 번에 한 가게 메뉴만 담기 가능
+        // 5. MVP 비즈니스 규칙: 한 번에 한 가게 메뉴만 담기 가능
         validateSingleStoreRule(cart, menu.getStoreId());
 
-        // 5. 장바구니가 비어있다면 현재 가게로 설정
+        // 6. 장바구니가 비어있다면 현재 가게로 설정
         if (cart.isEmpty()) {
             cart.setStoreId(menu.getStoreId());
             cartRepository.save(cart);

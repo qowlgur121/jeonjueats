@@ -142,6 +142,10 @@ public class OwnerOrderService {
         // 가게 정보 조회
         Store store = storeRepository.findById(order.getStoreId())
                 .orElseThrow(() -> new StoreNotFoundException("가게 정보를 찾을 수 없습니다."));
+        
+        // 사용자 정보 조회
+        User user = userRepository.findById(order.getUserId())
+                .orElse(null);
 
         // 주문 아이템들 조회
         List<OrderItem> orderItems = orderItemRepository.findByOrderIdOrderByCreatedAtDesc(order.getId());
@@ -181,6 +185,7 @@ public class OwnerOrderService {
         return OrderResponseDto.builder()
                 .orderId(order.getId())
                 .userId(order.getUserId())
+                .userNickname(user != null ? user.getNickname() : "탈퇴한 사용자")
                 .storeId(order.getStoreId())
                 .storeName(store.getName())
                 .storeImageUrl(store.getStoreImageUrl())

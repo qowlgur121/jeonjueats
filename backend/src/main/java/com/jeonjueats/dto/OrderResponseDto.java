@@ -17,6 +17,7 @@ public class OrderResponseDto {
 
     private Long orderId;
     private Long userId;
+    private String userNickname;
     
     // 가게 정보
     private Long storeId;

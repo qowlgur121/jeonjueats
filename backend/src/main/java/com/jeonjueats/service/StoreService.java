@@ -34,30 +34,29 @@ public class StoreService {
     private final MenuRepository menuRepository;
 
     /**
-     * 영업 중인 가게 목록 조회 (카테고리 필터링 지원)
-     * OPEN 상태인 가게만 반환하며, 카테고리별 필터링과 페이징을 지원
+     * 모든 가게 목록 조회 (카테고리 필터링 지원)
+     * 영업 상태에 관계없이 모든 가게를 반환하며, 카테고리별 필터링과 페이징을 지원
      * 
      * @param categoryId 카테고리 ID (null이면 전체 카테고리)
      * @param pageable 페이징 정보
      * @return 페이징된 가게 목록
      */
     public Page<StoreResponseDto> getOpenStores(Long categoryId, Pageable pageable) {
-        log.info("영업 중인 가게 목록 조회 시작 - 카테고리 ID: {}, 페이지: {}, 사이즈: {}", 
+        log.info("가게 목록 조회 시작 - 카테고리 ID: {}, 페이지: {}, 사이즈: {}", 
                  categoryId, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<Store> storePage;
         
         if (categoryId != null) {
-            // 특정 카테고리의 영업 중인 가게 조회
-            storePage = storeRepository.findByCategoryIdAndStatusAndIsDeletedFalseOrderByCreatedAtDesc(
-                    categoryId, StoreStatus.OPEN, pageable);
+            // 특정 카테고리의 모든 가게 조회 (영업 상태 무관)
+            storePage = storeRepository.findByCategoryIdAndIsDeletedFalseOrderByCreatedAtDesc(
+                    categoryId, pageable);
         } else {
-            // 전체 카테고리의 영업 중인 가게 조회
-            storePage = storeRepository.findByStatusAndIsDeletedFalseOrderByCreatedAtDesc(
-                    StoreStatus.OPEN, pageable);
+            // 전체 카테고리의 모든 가게 조회 (영업 상태 무관)
+            storePage = storeRepository.findByIsDeletedFalseOrderByCreatedAtDesc(pageable);
         }
 
-        log.info("영업 중인 가게 목록 조회 완료 - 총 {}개 가게 ({}페이지 중 {}페이지)", 
+        log.info("가게 목록 조회 완료 - 총 {}개 가게 ({}페이지 중 {}페이지)", 
                  storePage.getTotalElements(), storePage.getTotalPages(), pageable.getPageNumber() + 1);
 
         // Store 엔티티를 StoreResponseDto로 변환
@@ -93,23 +92,18 @@ public class StoreService {
 
     /**
      * 가게 상세 정보 및 메뉴 목록 조회
-     * OPEN 상태인 가게의 상세 정보와 해당 가게의 판매 중인 메뉴를 함께 조회
+     * 영업 상태에 관계없이 가게 상세 정보와 해당 가게의 판매 중인 메뉴를 함께 조회
      * 
      * @param storeId 조회할 가게 ID
      * @return 가게 상세 정보와 메뉴 목록
-     * @throws StoreNotFoundException 가게를 찾을 수 없거나 영업 중이 아닌 경우
+     * @throws StoreNotFoundException 가게를 찾을 수 없는 경우
      */
     public StoreDetailResponseDto getStoreDetail(Long storeId) {
         log.info("가게 상세 정보 조회 시작 - 가게 ID: {}", storeId);
 
-        // 가게 조회 및 영업 상태 확인
+        // 가게 조회 (영업 상태 무관)
         Store store = storeRepository.findByIdAndIsDeletedFalse(storeId)
                 .orElseThrow(() -> new StoreNotFoundException("가게를 찾을 수 없습니다."));
-        
-        // OPEN 상태인 가게만 허용
-        if (store.getStatus() != StoreStatus.OPEN) {
-            throw new StoreNotFoundException("현재 영업하지 않는 가게입니다.");
-        }
 
         // 해당 가게의 판매 중인 메뉴 조회
         List<Menu> menus = menuRepository.findByStoreIdAndStatusAndIsDeletedFalseOrderByCreatedAtDesc(

@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/images")
+@RequestMapping("/api/upload")
 @RequiredArgsConstructor
 public class ImageController {
 

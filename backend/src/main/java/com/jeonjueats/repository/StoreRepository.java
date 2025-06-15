@@ -103,4 +103,14 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
      * 카테고리별 영업 중인 매장 수 조회
      */
     long countByCategoryIdAndStatusAndIsDeletedFalse(Long categoryId, StoreStatus status);
+
+    /**
+     * 카테고리별 모든 매장 조회 (영업 상태 무관, 페이징)
+     */
+    Page<Store> findByCategoryIdAndIsDeletedFalseOrderByCreatedAtDesc(Long categoryId, Pageable pageable);
+
+    /**
+     * 모든 매장 조회 (영업 상태 무관, 페이징) - 전체 카테고리
+     */
+    Page<Store> findByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
 } 
