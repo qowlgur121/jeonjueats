@@ -83,6 +83,14 @@ const nextStep = () => {
     errorMessage.value = ''
     currentStep.value = 3
   } else if (currentStep.value === 3) {
+    if (!form.address1) {
+      errorMessage.value = '주소를 입력해주세요.'
+      return
+    }
+    if (!form.address2) {
+      errorMessage.value = '상세 주소를 입력해주세요.'
+      return
+    }
     errorMessage.value = ''
     currentStep.value = 4
   }
@@ -332,10 +340,10 @@ const searchAddress = () => {
         </button>
       </div>
 
-      <!-- Step 3: 주소 입력 (선택) -->
+      <!-- Step 3: 주소 입력 -->
       <div v-else-if="currentStep === 3" class="step-content">
-        <h2 class="step-title">가게 주소를 입력해주세요</h2>
-        <p class="step-description">가게 운영에 사용할 주소입니다 (선택사항)</p>
+        <h2 class="step-title">개인 주소를 입력해주세요</h2>
+        <p class="step-description">사장님의 개인 주소입니다</p>
 
         <!-- 주소 -->
         <div class="form-group">

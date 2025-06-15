@@ -61,7 +61,17 @@ const goToSignup = () => {
 }
 
 const goBack = () => {
-  router.back()
+  console.log('뒤로가기 버튼 클릭됨')
+  console.log('히스토리 길이:', window.history.length)
+  
+  // 브라우저 히스토리가 있으면 뒤로가기, 없으면 홈으로
+  if (window.history.length > 1) {
+    console.log('router.back() 실행')
+    router.back()
+  } else {
+    console.log('router.push("/") 실행')
+    router.push('/')
+  }
 }
 </script>
 
