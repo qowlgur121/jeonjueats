@@ -41,9 +41,9 @@ const handleLogin = async () => {
     })
     
     console.log('로그인 성공!')
-    // 로그인 성공 시 이전 페이지로 이동
-    const redirectTo = router.currentRoute.value.query.redirect as string
-    router.push(redirectTo || '/')
+    // 로그인 성공 시 리다이렉트 경로로 이동
+    const redirectPath = authStore.getAndClearRedirectPath()
+    router.push(redirectPath || '/')
   } catch (error: any) {
     console.error('로그인 에러:', error)
     errorMessage.value = error.response?.data?.message || '로그인에 실패했습니다.'

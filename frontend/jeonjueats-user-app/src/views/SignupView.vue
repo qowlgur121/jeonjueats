@@ -83,7 +83,14 @@ const nextStep = () => {
     errorMessage.value = ''
     currentStep.value = 3
   } else if (currentStep.value === 3) {
-    // 주소는 선택사항이므로 바로 다음 단계로
+    if (!form.address1) {
+      errorMessage.value = '주소를 입력해주세요.'
+      return
+    }
+    if (!form.address2) {
+      errorMessage.value = '상세 주소를 입력해주세요.'
+      return
+    }
     errorMessage.value = ''
     currentStep.value = 4
   }
@@ -336,7 +343,7 @@ const searchAddress = () => {
       <!-- Step 3: 주소 입력 (선택) -->
       <div v-else-if="currentStep === 3" class="step-content">
         <h2 class="step-title">주소를 입력해주세요</h2>
-        <p class="step-description">배달 주문 시 사용할 기본 주소입니다 (선택사항)</p>
+        <p class="step-description">배달 주문 시 사용할 기본 주소입니다</p>
 
         <!-- 주소 -->
         <div class="form-group">
