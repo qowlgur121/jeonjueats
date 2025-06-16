@@ -46,7 +46,7 @@ services:
   frontend-user:
     build:
       context: ./frontend/jeonjueats-user-app
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: jeonjueats-frontend-user-prod
     ports:
       - "80:80"
@@ -60,7 +60,7 @@ services:
   frontend-owner:
     build:
       context: ./frontend/jeonjueats-owner-app
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: jeonjueats-frontend-owner-prod
     ports:
       - "81:80"

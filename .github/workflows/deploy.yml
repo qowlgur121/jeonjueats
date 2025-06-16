@@ -63,8 +63,8 @@ jobs:
     - name: Build Docker images
       run: |
         docker build -t jeonjueats-backend:latest -f backend/Dockerfile.prod backend/
-        docker build -t jeonjueats-user:latest -f frontend/jeonjueats-user-app/Dockerfile frontend/jeonjueats-user-app/
-        docker build -t jeonjueats-owner:latest -f frontend/jeonjueats-owner-app/Dockerfile frontend/jeonjueats-owner-app/
+        docker build -t jeonjueats-user:latest -f frontend/jeonjueats-user-app/Dockerfile.prod frontend/jeonjueats-user-app/
+        docker build -t jeonjueats-owner:latest -f frontend/jeonjueats-owner-app/Dockerfile.prod frontend/jeonjueats-owner-app/
     
     - name: Save Docker images
       run: |
