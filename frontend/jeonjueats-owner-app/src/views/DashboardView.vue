@@ -2,27 +2,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as storesApi from '../api/stores'
+import { type Store } from '../api/stores'
 import apiClient from '../api/client'
-
-interface Store {
-  storeId: number
-  name: string
-  categoryId: number
-  categoryName: string
-  status: string
-  storeImageUrl: string | null
-  description: string
-  address1: string
-  address2: string
-  zipcode: string
-  phoneNumber: string
-  minOrderAmount: number
-  deliveryFee: number
-  averageRating: number
-  reviewCount: number
-  createdAt: string
-  updatedAt: string
-}
 
 interface DashboardStats {
   todayOrders: number
