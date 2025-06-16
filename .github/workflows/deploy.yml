@@ -85,6 +85,12 @@ jobs:
                 - "3306:3306"
               volumes:
                 - mysql_data_prod:/var/lib/mysql
+              healthcheck:
+                test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+                timeout: 20s
+                retries: 10
+                interval: 10s
+                start_period: 40s
               restart: unless-stopped
               networks:
                 - jeonjueats-network
@@ -102,7 +108,8 @@ jobs:
               ports:
                 - "8080:8080"
               depends_on:
-                - db
+                db:
+                  condition: service_healthy
               restart: unless-stopped
               networks:
                 - jeonjueats-network
