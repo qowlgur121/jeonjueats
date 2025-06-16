@@ -6,10 +6,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-jeonjueats_prod_password_2025}
-      MYSQL_DATABASE: ${DB_NAME:-jeonjueats}
-      MYSQL_USER: ${DB_USERNAME:-jeonjueats_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-jeonjueats_prod_password_2025}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-jeonjueats_prod_password_2025}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jeonjueats}
+      MYSQL_USER: ${MYSQL_USER:-jeonjueats_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jeonjueats_prod_password_2025}
     volumes:
       - mysql_data_prod:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,9 +20,7 @@ services:
 
   # Spring Boot 백엔드 (프로덕션)
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.prod
+    image: ${DOCKER_USERNAME}/jeonjueats-backend:latest
     container_name: jeonjueats-backend-prod
     ports:
       - "8080:8080"
@@ -32,9 +30,9 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: db
       DB_PORT: 3306
-      DB_NAME: ${DB_NAME:-jeonjueats}
-      DB_USERNAME: ${DB_USERNAME:-jeonjueats_user}
-      DB_PASSWORD: ${DB_PASSWORD:-jeonjueats_prod_password_2025}
+      DB_NAME: ${MYSQL_DATABASE:-jeonjueats}
+      DB_USERNAME: ${MYSQL_USER:-jeonjueats_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-jeonjueats_prod_password_2025}
       JWT_SECRET: ${JWT_SECRET:-jeonjueats-secure-jwt-secret-key-for-production-change-this-in-real-deployment}
     volumes:
       - ./backend/uploads:/app/uploads
@@ -44,9 +42,7 @@ services:
 
   # 일반 사용자용 Vue.js 프론트엔드 (프로덕션)
   frontend-user:
-    build:
-      context: ./frontend/jeonjueats-user-app
-      dockerfile: Dockerfile.prod
+    image: ${DOCKER_USERNAME}/jeonjueats-user:latest
     container_name: jeonjueats-frontend-user-prod
     ports:
       - "80:80"
@@ -58,9 +54,7 @@ services:
 
   # 사장님용 Vue.js 프론트엔드 (프로덕션)
   frontend-owner:
-    build:
-      context: ./frontend/jeonjueats-owner-app
-      dockerfile: Dockerfile.prod
+    image: ${DOCKER_USERNAME}/jeonjueats-owner:latest
     container_name: jeonjueats-frontend-owner-prod
     ports:
       - "81:80"
