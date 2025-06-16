@@ -70,17 +70,68 @@ jobs:
           # 기존 컨테이너 정리
           docker compose -f docker-compose.prod.yml down || true
           
-          # Git 저장소 클론 또는 업데이트
-          if [ ! -d ".git" ]; then
-            cd /home/ubuntu
-            rm -rf jeonjueats
-            git clone https://github.com/jihyeokbae/jeonjueats.git
-            cd jeonjueats
-          else
-            git fetch origin main
-            git reset --hard origin/main
-            git pull origin main
-          fi
+          # docker-compose.prod.yml 파일 직접 생성 (Git 클론 없이)
+          cat > docker-compose.prod.yml << 'COMPOSE_EOF'
+          services:
+            db:
+              image: mysql:8.0
+              container_name: jeonjueats-db-prod
+              environment:
+                MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                MYSQL_DATABASE: ${MYSQL_DATABASE}
+                MYSQL_USER: ${MYSQL_USER}
+                MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+              ports:
+                - "3306:3306"
+              volumes:
+                - mysql_data_prod:/var/lib/mysql
+              restart: unless-stopped
+              networks:
+                - jeonjueats-network
+
+            backend:
+              image: ${DOCKER_USERNAME}/jeonjueats-backend:latest
+              container_name: jeonjueats-backend-prod
+              environment:
+                SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+                SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+                SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+                SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+                JWT_SECRET: ${JWT_SECRET}
+                SERVER_PORT: ${SERVER_PORT}
+              ports:
+                - "8080:8080"
+              depends_on:
+                - db
+              restart: unless-stopped
+              networks:
+                - jeonjueats-network
+
+            frontend-user:
+              image: ${DOCKER_USERNAME}/jeonjueats-user:latest
+              container_name: jeonjueats-user-prod
+              ports:
+                - "80:80"
+              restart: unless-stopped
+              networks:
+                - jeonjueats-network
+
+            frontend-owner:
+              image: ${DOCKER_USERNAME}/jeonjueats-owner:latest
+              container_name: jeonjueats-owner-prod
+              ports:
+                - "81:80"
+              restart: unless-stopped
+              networks:
+                - jeonjueats-network
+
+          volumes:
+            mysql_data_prod:
+
+          networks:
+            jeonjueats-network:
+              driver: bridge
+          COMPOSE_EOF
           
           # 환경 변수 파일 생성
           cat > .env << 'EOF'
