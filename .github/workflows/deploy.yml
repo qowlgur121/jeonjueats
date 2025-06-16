@@ -1,0 +1,114 @@
+name: Deploy JeonjuEats to EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/jeonjueats-user-app/package-lock.json
+          frontend/jeonjueats-owner-app/package-lock.json
+    
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+    
+    - name: Build Backend
+      run: |
+        cd backend
+        chmod +x gradlew
+        ./gradlew clean build -x test
+    
+    - name: Build Frontend User App
+      run: |
+        cd frontend/jeonjueats-user-app
+        npm ci
+        npm run build
+    
+    - name: Build Frontend Owner App
+      run: |
+        cd frontend/jeonjueats-owner-app
+        npm ci
+        npm run build
+    
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker images
+      run: |
+        docker build -t jeonjueats-backend:latest -f backend/Dockerfile.prod backend/
+        docker build -t jeonjueats-user:latest -f frontend/jeonjueats-user-app/Dockerfile frontend/jeonjueats-user-app/
+        docker build -t jeonjueats-owner:latest -f frontend/jeonjueats-owner-app/Dockerfile frontend/jeonjueats-owner-app/
+    
+    - name: Save Docker images
+      run: |
+        docker save jeonjueats-backend:latest > backend.tar
+        docker save jeonjueats-user:latest > user.tar
+        docker save jeonjueats-owner:latest > owner.tar
+    
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: ${{ secrets.EC2_PORT }}
+        script: |
+          # 기존 컨테이너 정리
+          docker-compose -f /home/ubuntu/jeonjueats/docker-compose.prod.yml down || true
+          
+          # 코드 업데이트
+          cd /home/ubuntu/jeonjueats
+          git pull origin main
+          
+          # 환경 변수 설정 (GitHub Secrets로 생성)
+          cat > .env << EOF
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=jeonjueats
+          MYSQL_USER=jeonjueats_user
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SPRING_PROFILES_ACTIVE=prod
+          SERVER_PORT=8080
+          EOF
+          
+          # Docker 이미지 빌드 및 실행
+          docker-compose -f docker-compose.prod.yml up -d --build
+          
+          # 불필요한 이미지 정리
+          docker system prune -f
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "배포가 성공적으로 완료되었습니다!"
+        else
+          echo "배포에 실패했습니다."
+        fi

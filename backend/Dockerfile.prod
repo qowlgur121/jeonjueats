@@ -1,0 +1,37 @@
+# Build stage - 개발용과 동일한 Java 버전
+FROM openjdk:17-jdk-slim AS build
+
+WORKDIR /app
+
+# Gradle Wrapper와 빌드 파일들 복사
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+
+# 소스 코드 복사
+COPY src src
+
+# 실행 권한 부여 및 빌드
+RUN chmod +x gradlew
+RUN ./gradlew clean build -x test
+
+# Runtime stage - 프로덕션 최적화 (JRE만 사용)
+FROM openjdk:17-jre-slim
+
+WORKDIR /app
+
+# 빌드된 JAR 파일 복사
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# 업로드 디렉토리 생성
+RUN mkdir -p /app/uploads/images
+
+# 포트 노출
+EXPOSE 8080
+
+# 프로덕션용 JVM 옵션 설정
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+
+# 애플리케이션 실행
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
