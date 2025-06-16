@@ -23,7 +23,7 @@ const handleLogout = async () => {
   <header class="header">
     <div class="header-container">
       <div class="header-left">
-        <div class="logo">
+        <router-link to="/" class="logo">
           <div class="logo-text">
             <span class="logo-char c1">j</span>
             <span class="logo-char c2">e</span>
@@ -38,7 +38,7 @@ const handleLogout = async () => {
             <span class="logo-char c1">s</span>
           </div>
           <span class="owner-badge">사장님</span>
-        </div>
+        </router-link>
       </div>
       <div class="header-right">
         <div class="user-info">
@@ -79,6 +79,7 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  text-decoration: none;
 }
 
 .logo-text {

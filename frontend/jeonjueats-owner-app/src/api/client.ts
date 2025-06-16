@@ -1,8 +1,17 @@
 import axios from 'axios'
 
-// 백엔드 API 기본 설정
+// 백엔드 API 기본 설정 - 환경별 동적 URL
+const getApiBaseUrl = () => {
+  // 개발 환경 (localhost)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8080'
+  }
+  // 프로덕션 환경 (EC2)
+  return `http://${window.location.hostname}:8080`
+}
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: getApiBaseUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
