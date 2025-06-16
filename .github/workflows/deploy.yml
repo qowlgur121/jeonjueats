@@ -68,7 +68,7 @@ jobs:
           cd /home/ubuntu/jeonjueats
           
           # 기존 컨테이너 정리
-          docker-compose -f docker-compose.prod.yml down || true
+          docker compose -f docker-compose.prod.yml down || true
           
           # Git 저장소 클론 또는 업데이트
           if [ ! -d ".git" ]; then
@@ -100,13 +100,13 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-owner:latest
           
           # Docker Compose로 실행 (빌드 없이 이미지 사용)
-          docker-compose -f docker-compose.prod.yml up -d
+          docker compose -f docker-compose.prod.yml up -d
           
           # 불필요한 이미지 정리
           docker image prune -f
           
           # 컨테이너 상태 확인
-          docker-compose -f docker-compose.prod.yml ps
+          docker compose -f docker-compose.prod.yml ps
     
     - name: Notify deployment status
       if: always()
