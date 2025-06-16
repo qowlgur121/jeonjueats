@@ -1,5 +1,6 @@
 package com.jeonjueats.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -13,28 +14,28 @@ import java.nio.file.Paths;
  * 정적 리소스 서빙, CORS 설정 및 웹 관련 설정을 담당
  */
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
     @Value("${app.upload.directory:uploads}")
     private String uploadDirectory;
+    
+    private final CorsProperties corsProperties;
 
     /**
      * CORS 설정
-     * 프론트엔드(localhost:3000, localhost:3001)에서 백엔드 API 접근 허용
+     * application.yml에 설정된 도메인에서 백엔드 API 접근 허용
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                    "http://localhost:3000",  // 고객용 Vue.js 앱
-                    "http://localhost:3001"   // 사장님용 Vue.js 앱
-                )
+                .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600); // 1시간 캐싱
         
-        System.out.println("CORS 설정 완료: localhost:3000, localhost:3001에서 API 접근 허용");
+        System.out.println("CORS 설정 완료: " + String.join(", ", corsProperties.getAllowedOrigins()));
     }
 
     /**
@@ -45,7 +46,7 @@ public class WebConfig implements WebMvcConfigurer {
      * 실제 경로: file:./uploads/ (프로젝트 루트 기준)
      * 
      * 예시:
-     * - 요청: http://localhost:8080/api/images/chicken1.jpg
+     * - 요청: /api/images/chicken1.jpg
      * - 실제 파일: ./uploads/images/chicken1.jpg
      */
     @Override

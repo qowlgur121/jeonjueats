@@ -74,4 +74,14 @@ jwt:
 app:
   upload:
     directory: "uploads"  # 상대 경로로 설정 (프로젝트 루트 기준)
-    base-url: "http://localhost:8080"  # 개발 환경 기본 URL 
+    base-url: "http://localhost:8080"  # 개발 환경 기본 URL
+  
+# CORS 설정
+cors:
+  allowed-origins:
+    - "http://localhost:3000"      # 유저 앱 (개발)
+    - "http://localhost:3001"      # 사장님 앱 (개발)
+    - "http://localhost:80"        # 유저 앱 (Docker 개발)
+    - "http://localhost:81"        # 사장님 앱 (Docker 개발)
+    - "http://3.35.145.18"         # 유저 앱 (프로덕션)
+    - "http://3.35.145.18:81"      # 사장님 앱 (프로덕션) 

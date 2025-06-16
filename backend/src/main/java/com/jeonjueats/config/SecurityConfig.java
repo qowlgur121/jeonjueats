@@ -33,6 +33,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CorsProperties corsProperties;
 
     /**
      * 비밀번호 암호화를 위한 BCryptPasswordEncoder Bean 등록
@@ -54,16 +55,17 @@ public class SecurityConfig {
      * - 웹 브라우저의 보안 정책으로, 다른 도메인 간의 요청을 제한함
      * - 예: localhost:3000(프론트엔드)에서 localhost:8080(백엔드)로 요청할 때 필요
      * - 허용할 Origin, HTTP Method, Header 등을 명시적으로 설정해야 함
+     * 
+     * 환경별 설정:
+     * - application.yml에서 cors.allowed-origins 설정을 통해
+     * - 개발 환경과 프로덕션 환경의 Origin을 동적으로 관리
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 허용할 Origin (프론트엔드 도메인)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",  // 사용자용 Vue.js 앱
-            "http://localhost:3001"   // 사장님용 Vue.js 앱
-        ));
+        // 허용할 Origin (application.yml에서 동적으로 읽어옴)
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
         
         // 허용할 HTTP 메서드
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
