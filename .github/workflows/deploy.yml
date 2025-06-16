@@ -63,6 +63,43 @@ jobs:
         timeout: 600s
         command_timeout: 600s
         script: |
+          # Docker 설치 확인 및 설치
+          if ! command -v docker &> /dev/null; then
+            echo "Docker가 설치되어 있지 않습니다. 설치를 시작합니다..."
+            
+            # Docker 설치
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl gnupg
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            sudo chmod a+r /etc/apt/keyrings/docker.gpg
+            
+            echo \
+              "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+              "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+              sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            
+            # 현재 사용자를 docker 그룹에 추가
+            sudo usermod -aG docker $USER
+            newgrp docker
+            
+            echo "Docker 설치 완료"
+          fi
+          
+          # Swap 메모리 확인 및 설정 (t2.micro 메모리 부족 대응)
+          if [ ! -f /swapfile ]; then
+            echo "Swap 메모리 설정 중..."
+            sudo dd if=/dev/zero of=/swapfile bs=128M count=16
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+            echo "Swap 메모리 설정 완료"
+          fi
+          
           # 프로젝트 디렉토리 생성 및 이동
           mkdir -p /home/ubuntu/jeonjueats
           cd /home/ubuntu/jeonjueats
@@ -152,6 +189,42 @@ jobs:
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           EOF
           
+          # systemd 서비스 파일 생성 (서버 재부팅 시 자동 시작)
+          if [ ! -f /etc/systemd/system/jeonjueats.service ]; then
+            echo "systemd 서비스 설정 중..."
+            sudo tee /etc/systemd/system/jeonjueats.service > /dev/null << 'SYSTEMD_EOF'
+          [Unit]
+          Description=JeonjuEats Docker Compose Application
+          Requires=docker.service
+          After=docker.service network.target
+          
+          [Service]
+          Type=simple
+          User=ubuntu
+          WorkingDirectory=/home/ubuntu/jeonjueats
+          ExecStartPre=/usr/bin/docker compose -f docker-compose.prod.yml pull
+          ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up
+          ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
+          Restart=always
+          RestartSec=10
+          StandardOutput=append:/var/log/jeonjueats.log
+          StandardError=append:/var/log/jeonjueats.error.log
+          
+          [Install]
+          WantedBy=multi-user.target
+          SYSTEMD_EOF
+            
+            # 로그 파일 생성
+            sudo touch /var/log/jeonjueats.log
+            sudo touch /var/log/jeonjueats.error.log
+            sudo chown ubuntu:ubuntu /var/log/jeonjueats.*
+            
+            # systemd 리로드 및 서비스 활성화
+            sudo systemctl daemon-reload
+            sudo systemctl enable jeonjueats.service
+            echo "systemd 서비스 설정 완료"
+          fi
+          
           # Docker Hub에서 최신 이미지 Pull
           docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-backend:latest
           docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-user:latest
@@ -170,10 +243,10 @@ jobs:
       if: always()
       run: |
         if [ ${{ job.status }} == 'success' ]; then
-          echo "🎉 배포가 성공적으로 완료되었습니다!"
+          echo " 배포가 성공적으로 완료되었습니다!"
           echo "- 유저 앱: http://${{ secrets.EC2_HOST }}"
           echo "- 사장님 앱: http://${{ secrets.EC2_HOST }}:81"
           echo "- 백엔드 API: http://${{ secrets.EC2_HOST }}:8080"
         else
-          echo "❌ 배포에 실패했습니다."
+          echo " 배포에 실패했습니다."
         fi
