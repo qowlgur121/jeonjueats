@@ -30,8 +30,8 @@ RUN mkdir -p /app/uploads/images
 # 포트 노출
 EXPOSE 8080
 
-# 프로덕션용 JVM 옵션 설정
-ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+# 프로덕션용 JVM 옵션 설정 (Java 17 호환)
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport"
 
 # 애플리케이션 실행
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
