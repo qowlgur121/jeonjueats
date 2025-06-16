@@ -29,6 +29,23 @@ const dashboardStats = ref<DashboardStats>({
   completedOrders: 0
 })
 
+// 카테고리 ID를 이름으로 변환하는 함수
+const getCategoryName = (categoryId: number): string => {
+  const categories = [
+    { id: 1, name: "치킨" },
+    { id: 2, name: "피자" },
+    { id: 3, name: "중식" },
+    { id: 4, name: "한식" },
+    { id: 5, name: "일식" },
+    { id: 6, name: "양식" },
+    { id: 7, name: "분식" },
+    { id: 8, name: "카페·디저트" },
+    { id: 9, name: "족발·보쌈" },
+    { id: 10, name: "야식" }
+  ]
+  return categories.find(cat => cat.id === categoryId)?.name || "기타"
+}
+
 const loadStores = async () => {
   try {
     isLoading.value = true
@@ -185,7 +202,7 @@ onMounted(async () => {
               </div>
               <div class="store-info">
                 <h4>{{ store.name }}</h4>
-                <p>{{ store.categoryName }}</p>
+                <p>{{ getCategoryName(store.categoryId) }}</p>
                 <span class="status" :class="store.status.toLowerCase()">
                   {{ store.status === 'OPEN' ? '영업중' : '영업종료' }}
                 </span>
