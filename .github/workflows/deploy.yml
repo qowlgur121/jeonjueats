@@ -143,6 +143,8 @@ jobs:
                 SERVER_PORT: ${SERVER_PORT}
               ports:
                 - "8080:8080"
+              volumes:
+                - ./uploads:/app/uploads
               depends_on:
                 db:
                   condition: service_healthy
