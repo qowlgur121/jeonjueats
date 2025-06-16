@@ -7,88 +7,83 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: |
-          frontend/jeonjueats-user-app/package-lock.json
-          frontend/jeonjueats-owner-app/package-lock.json
     
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: Cache Gradle packages
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-    
-    - name: Build Backend
-      run: |
-        cd backend
-        chmod +x gradlew
-        ./gradlew clean build -x test
-    
-    - name: Build Frontend User App
-      run: |
-        cd frontend/jeonjueats-user-app
-        npm ci
-        npm run build
-    
-    - name: Build Frontend Owner App
-      run: |
-        cd frontend/jeonjueats-owner-app
-        npm ci
-        npm run build
-    
-    - name: Setup Docker Buildx
+    - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     
-    - name: Build Docker images
-      run: |
-        docker build -t jeonjueats-backend:latest -f backend/Dockerfile.prod backend/
-        docker build -t jeonjueats-user:latest -f frontend/jeonjueats-user-app/Dockerfile.prod frontend/jeonjueats-user-app/
-        docker build -t jeonjueats-owner:latest -f frontend/jeonjueats-owner-app/Dockerfile.prod frontend/jeonjueats-owner-app/
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
     
-    - name: Save Docker images
-      run: |
-        docker save jeonjueats-backend:latest > backend.tar
-        docker save jeonjueats-user:latest > user.tar
-        docker save jeonjueats-owner:latest > owner.tar
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile.prod
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/jeonjueats-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push user app image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend/jeonjueats-user-app
+        file: ./frontend/jeonjueats-user-app/Dockerfile.prod
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/jeonjueats-user:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push owner app image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend/jeonjueats-owner-app
+        file: ./frontend/jeonjueats-owner-app/Dockerfile.prod
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/jeonjueats-owner:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
     - name: Deploy to EC2
-      uses: appleboy/ssh-action@v1.0.0
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         port: ${{ secrets.EC2_PORT }}
+        timeout: 600s
+        command_timeout: 600s
         script: |
-          # 기존 컨테이너 정리
-          docker-compose -f /home/ubuntu/jeonjueats/docker-compose.prod.yml down || true
-          
-          # 코드 업데이트
+          # 프로젝트 디렉토리 생성 및 이동
+          mkdir -p /home/ubuntu/jeonjueats
           cd /home/ubuntu/jeonjueats
-          git pull origin main
           
-          # 환경 변수 설정 (GitHub Secrets로 생성)
-          cat > .env << EOF
+          # 기존 컨테이너 정리
+          docker-compose -f docker-compose.prod.yml down || true
+          
+          # Git 저장소 클론 또는 업데이트
+          if [ ! -d ".git" ]; then
+            cd /home/ubuntu
+            rm -rf jeonjueats
+            git clone https://github.com/jihyeokbae/jeonjueats.git
+            cd jeonjueats
+          else
+            git fetch origin main
+            git reset --hard origin/main
+            git pull origin main
+          fi
+          
+          # 환경 변수 파일 생성
+          cat > .env << 'EOF'
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE=jeonjueats
           MYSQL_USER=jeonjueats_user
@@ -96,19 +91,31 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           SPRING_PROFILES_ACTIVE=prod
           SERVER_PORT=8080
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           EOF
           
-          # Docker 이미지 빌드 및 실행
-          docker-compose -f docker-compose.prod.yml up -d --build
+          # Docker Hub에서 최신 이미지 Pull
+          docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-backend:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-user:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/jeonjueats-owner:latest
+          
+          # Docker Compose로 실행 (빌드 없이 이미지 사용)
+          docker-compose -f docker-compose.prod.yml up -d
           
           # 불필요한 이미지 정리
-          docker system prune -f
+          docker image prune -f
+          
+          # 컨테이너 상태 확인
+          docker-compose -f docker-compose.prod.yml ps
     
     - name: Notify deployment status
       if: always()
       run: |
         if [ ${{ job.status }} == 'success' ]; then
-          echo "배포가 성공적으로 완료되었습니다!"
+          echo "🎉 배포가 성공적으로 완료되었습니다!"
+          echo "- 유저 앱: http://${{ secrets.EC2_HOST }}"
+          echo "- 사장님 앱: http://${{ secrets.EC2_HOST }}:81"
+          echo "- 백엔드 API: http://${{ secrets.EC2_HOST }}:8080"
         else
-          echo "배포에 실패했습니다."
+          echo "❌ 배포에 실패했습니다."
         fi
