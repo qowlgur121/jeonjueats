@@ -157,8 +157,6 @@ jobs:
               container_name: jeonjueats-user-prod
               ports:
                 - "80:80"
-              volumes:
-                - ./uploads:/app/uploads
               restart: unless-stopped
               networks:
                 - jeonjueats-network
@@ -168,8 +166,6 @@ jobs:
               container_name: jeonjueats-owner-prod
               ports:
                 - "81:80"
-              volumes:
-                - ./uploads:/app/uploads
               restart: unless-stopped
               networks:
                 - jeonjueats-network
