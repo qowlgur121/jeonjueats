@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 전주잇츠 커스텀 스타일 */
+/* 전주이츠 커스텀 스타일 */
 :root {
   /* 쿠팡이츠 스타일 색상 */
   --primary-color: #00D0FF;

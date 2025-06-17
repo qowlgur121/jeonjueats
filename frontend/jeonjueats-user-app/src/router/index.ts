@@ -104,7 +104,7 @@ const router = createRouter({
 // 라우터 가드
 router.beforeEach((to, from, next) => {
   // 페이지 제목 설정
-  document.title = to.meta.title ? `${to.meta.title} - 전주잇츠` : '전주잇츠'
+  document.title = to.meta.title ? `${to.meta.title} - 전주이츠` : '전주이츠'
   
   // 인증이 필요한 페이지 체크
   if (to.meta.requiresAuth) {

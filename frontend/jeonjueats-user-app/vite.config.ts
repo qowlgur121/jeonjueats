@@ -27,8 +27,8 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: '전주잇츠 - 전주 맛집 배달 서비스',
-        short_name: '전주잇츠',
+        name: '전주이츠 - 전주 맛집 배달',
+        short_name: '전주이츠',
         description: '전주 지역 맛집과 고객을 연결하는 배달 주문 플랫폼',
         theme_color: '#ff6b35',
         background_color: '#ffffff',
@@ -36,6 +36,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         orientation: 'portrait',
+        lang: 'ko',
+        categories: ['food', 'shopping'],
         icons: [
           {
             src: '/pwa-192x192.png',
