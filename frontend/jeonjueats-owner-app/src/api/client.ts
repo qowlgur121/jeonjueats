@@ -6,8 +6,8 @@ const getApiBaseUrl = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:8080'
   }
-  // 프로덕션 환경 (EC2)
-  return `http://${window.location.hostname}:8080`
+  // 프로덕션 환경 (nginx 프록시 사용)
+  return `${window.location.protocol}//${window.location.host}`
 }
 
 const apiClient = axios.create({
@@ -54,11 +54,20 @@ apiClient.interceptors.response.use(
         const imageFields = ['storeImageUrl', 'menuImageUrl', 'imageUrl']
         imageFields.forEach(field => {
           if (processed[field] && processed[field].startsWith('/')) {
-            // /images/로 시작하면 /api/images/로 변경
-            if (processed[field].startsWith('/images/')) {
-              processed[field] = processed[field].replace('/images/', '/api/images/')
+            // 개발 환경에서는 직접 백엔드 서버 사용
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              // /images/로 시작하면 /api/images/로 변경
+              if (processed[field].startsWith('/images/')) {
+                processed[field] = processed[field].replace('/images/', '/api/images/')
+              }
+              processed[field] = `${apiClient.defaults.baseURL}${processed[field]}`
+            } else {
+              // 프로덕션 환경에서는 nginx 프록시 사용
+              if (processed[field].startsWith('/images/')) {
+                processed[field] = processed[field].replace('/images/', '/api/images/')
+              }
+              processed[field] = `${window.location.protocol}//${window.location.host}${processed[field]}`
             }
-            processed[field] = `${apiClient.defaults.baseURL}${processed[field]}`
           }
         })
         
