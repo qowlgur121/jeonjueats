@@ -103,6 +103,15 @@ jobs:
           mkdir -p /home/ubuntu/jeonjueats
           cd /home/ubuntu/jeonjueats
           
+          # uploads 디렉토리가 없으면 Git에서 가져오기
+          if [ ! -d "uploads" ]; then
+            echo "uploads 디렉토리가 없습니다. Git에서 가져오는 중..."
+            git clone --depth 1 https://github.com/${{ github.repository }}.git temp_repo
+            cp -r temp_repo/uploads ./
+            rm -rf temp_repo
+            echo "uploads 디렉토리 복사 완료"
+          fi
+          
           # 기존 컨테이너 정리
           sudo docker compose -f docker-compose.prod.yml down || true
           
