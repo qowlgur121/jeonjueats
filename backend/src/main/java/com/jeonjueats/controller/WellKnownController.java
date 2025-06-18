@@ -25,14 +25,14 @@ public class WellKnownController {
     @GetMapping(value = "/assetlinks.json", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getAssetLinks() {
         // TWA 앱과 웹사이트 간의 연결 설정
-        // APK 서명 해시값을 실제 값으로 교체해야 함
         String assetLinks = """
             [{
               "relation": ["delegate_permission/common.handle_all_urls"],
               "target": {
                 "namespace": "android_app",
                 "package_name": "me.jeonjueats.twa",
-                "sha256_cert_fingerprints": ["C4:B5:D1:ED:5E:30:1C:1B:36:3F:6C:3F:D8:EE:3C:75:39:60:BA:15:3D:C8:02:6A:89:1F:E4:BF:5F:46:CB:D3"]
+                "sha256_cert_fingerprints": ["C4:B5:D1:ED:5E:30:1C:1B:36:3F:6C:3F:D8:EE:3C:75:39:60:BA:15:3D:C8:02:6A:89:1F:E4:BF:5F:46:CB:D3",
+                                            "E4:11:7B:CE:AE:5C:A4:06:65:5F:E2:C2:2F:BC:65:70:70:4E:13:35:E8:DD:24:72:47:FD:A8:58:33:82:C9:BC"]
               }
             }]
             """;
