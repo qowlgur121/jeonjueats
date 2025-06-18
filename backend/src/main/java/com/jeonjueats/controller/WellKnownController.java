@@ -32,7 +32,7 @@ public class WellKnownController {
               "target": {
                 "namespace": "android_app",
                 "package_name": "me.jeonjueats.twa",
-                "sha256_cert_fingerprints": ["E4:11:7B:CE:AE:5C:A4:06:65:5F:E2:C2:2F:BC:65:70:70:4E:13:35:E8:DD:24:72:47:FD:A8:58:33:82:C9:BC"]
+                "sha256_cert_fingerprints": ["C4:B5:D1:ED:5E:30:1C:1B:36:3F:6C:3F:D8:EE:3C:75:39:60:BA:15:3D:C8:02:6A:89:1F:E4:BF:5F:46:CB:D3"]
               }
             }]
             """;
