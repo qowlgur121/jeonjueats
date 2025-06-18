@@ -27,10 +27,11 @@ export default defineConfig({
         ]
       },
       manifest: {
+        id: 'com.jeonjueats.app',
         name: '전주이츠 - 전주 맛집 배달',
         short_name: '전주이츠',
         description: '전주 지역 맛집과 고객을 연결하는 배달 주문 플랫폼',
-        theme_color: '#ff6b35',
+        theme_color: '#00D0FF',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
@@ -62,6 +63,50 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/screenshots/home.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '전주이츠 홈 화면'
+          },
+          {
+            src: '/screenshots/store-detail.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '가게 상세 페이지'
+          },
+          {
+            src: '/screenshots/cart.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '장바구니'
+          },
+          {
+            src: '/screenshots/order.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '주문 화면'
+          },
+          {
+            src: '/screenshots/mypage.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '마이페이지'
+          },
+          {
+            src: '/screenshots/order-history.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: '주문 내역'
           }
         ]
       }
