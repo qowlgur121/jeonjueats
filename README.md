@@ -40,7 +40,7 @@
 ## 시스템 아키텍처
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/51a37b1e-f45a-47fe-98b1-7e47fd9a127c" width="800" alt="시스템 아키텍처">
+  <img src="https://github.com/user-attachments/assets/278300f1-d349-499f-9611-e81f5f5a3f62" width="1000" alt="시스템 아키텍처">
 </div>
 
 ### 주요 기술 스택
@@ -239,25 +239,9 @@ npm run dev
 
 ### CI/CD 파이프라인
 
-```mermaid
-flowchart LR
-    A[GitHub Push] --> B[GitHub Actions]
-    B --> C[Docker 이미지 빌드]
-    C --> D[Docker Hub 푸시]
-    D --> E[EC2 SSH 접속]
-    E --> F[이미지 Pull]
-    F --> G[컨테이너 재시작]
-    G --> H[배포 완료]
-    
-    style A fill:#e3f2fd
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fce4ec
-    style F fill:#e1f5fe
-    style G fill:#f1f8e9
-    style H fill:#e8eaf6
-```
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/63f62f31-cb6c-4318-95ad-b19f7ba1840f" width="900" alt="CI/CD 파이프라인">
+</div>
 
 1. **GitHub Actions**: 소스 코드 체크아웃 및 Docker 이미지 빌드
 2. **Docker Hub**: 자동 이미지 푸시 
