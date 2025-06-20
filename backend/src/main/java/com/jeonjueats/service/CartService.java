@@ -192,6 +192,7 @@ public class CartService {
             .storeId(store.getId())
             .storeName(store.getName())
             .storeImageUrl(store.getStoreImageUrl())
+            .minOrderAmount(store.getMinOrderAmount())
             .items(itemDtos)
             .totalItemCount(itemDtos.size())
             .totalQuantity(summary.totalQuantity)
@@ -211,6 +212,7 @@ public class CartService {
             .storeId(null)
             .storeName(null)
             .storeImageUrl(null)
+            .minOrderAmount(BigDecimal.ZERO)
             .items(Collections.emptyList())
             .totalItemCount(0)
             .totalQuantity(0)
@@ -367,6 +369,32 @@ public class CartService {
         // 장바구니 아이템 조회 및 소유권 검증
         CartItem cartItem = findCartItemByIdAndUserId(cartItemId, userId);
         
+        // 수량이 0이면 아이템 삭제
+        if (quantity <= 0) {
+            log.info("수량이 0 이하이므로 장바구니 아이템 삭제 - 아이템 ID: {}", cartItemId);
+            cartItemRepository.delete(cartItem);
+            
+            // 장바구니가 비었는지 확인하고 초기화
+            checkAndClearEmptyCart(userId);
+            
+            // 삭제된 아이템 정보 반환 (수량 0으로)
+            CartItemResponseDto deletedItem = convertToCartItemDto(cartItem);
+            deletedItem = CartItemResponseDto.builder()
+                    .cartItemId(deletedItem.getCartItemId())
+                    .menuId(deletedItem.getMenuId())
+                    .menuName(deletedItem.getMenuName())
+                    .menuDescription(deletedItem.getMenuDescription())
+                    .menuPrice(deletedItem.getMenuPrice())
+                    .menuImageUrl(deletedItem.getMenuImageUrl())
+                    .quantity(0) // 삭제되었으므로 0
+                    .itemTotalPrice(BigDecimal.ZERO)
+                    .addedAt(deletedItem.getAddedAt())
+                    .build();
+            
+            log.info("장바구니 아이템 삭제 완료 - 아이템 ID: {}", cartItemId);
+            return deletedItem;
+        }
+        
         // 수량 덮어쓰기 (PRD 변경사항)
         cartItem.setQuantity(quantity);
         // JPA Dirty Checking으로 자동 저장
@@ -397,6 +425,10 @@ public class CartService {
         log.info("장바구니 아이템 삭제 요청 - 사용자: {}, 아이템 ID: {}", userId, cartItemId);
         CartItem cartItem = findCartItemByIdAndUserId(cartItemId, userId);
         cartItemRepository.delete(cartItem);
+        
+        // 장바구니가 비었는지 확인하고 초기화
+        checkAndClearEmptyCart(userId);
+        
         log.info("장바구니 아이템 삭제 완료 - 아이템 ID: {}", cartItemId);
     }
 
@@ -448,6 +480,26 @@ public class CartService {
             throw new InvalidCartOperationException(
                 "다른 가게의 메뉴가 이미 장바구니에 담겨 있습니다. " +
                 "새로운 가게의 메뉴를 담으려면 기존 장바구니를 비워주세요.");
+        }
+    }
+
+    /**
+     * 장바구니가 비었는지 확인하고 필요시 초기화
+     */
+    private void checkAndClearEmptyCart(Long userId) {
+        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            
+            // 실제 장바구니 아이템이 있는지 확인
+            List<CartItem> remainingItems = cartItemRepository.findByCartIdOrderByCreatedAtDesc(cart.getId());
+            
+            if (remainingItems.isEmpty()) {
+                // 아이템이 없으면 장바구니 초기화
+                log.info("장바구니에 아이템이 없어 초기화 - 사용자: {}", userId);
+                cart.clear();
+                cartRepository.save(cart);
+            }
         }
     }
 } 

@@ -20,6 +20,7 @@ export interface CartResponse {
   storeId?: number
   storeName?: string
   storeImageUrl?: string
+  minOrderAmount: number
   items: CartItem[]
   totalItemCount: number
   totalQuantity: number

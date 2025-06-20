@@ -18,6 +18,7 @@ public class CartResponseDto {
     private Long storeId;
     private String storeName;
     private String storeImageUrl;
+    private BigDecimal minOrderAmount; // 가게의 최소 주문 금액
     private List<CartItemResponseDto> items;
     
     // 주문 요약 정보

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getCart, removeCartItem, clearCart, type CartResponse, type CartItem } from '../api/cart'
+import { getCart, removeCartItem, clearCart, updateCartItem, type CartResponse, type CartItem } from '../api/cart'
 
 // 라우터
 const router = useRouter()
@@ -44,16 +44,35 @@ const goBack = () => {
   router.back()
 }
 
-// 수량 증가 (API 연동 필요)
+// 수량 증가
 const increaseQuantity = async (item: CartItem) => {
-  // TODO: 수량 업데이트 API 호출
-  console.log('수량 증가:', item.cartItemId)
+  try {
+    console.log('수량 증가:', item.cartItemId, '현재 수량:', item.quantity)
+    await updateCartItem(item.cartItemId, { quantity: item.quantity + 1 })
+    await loadCart() // 업데이트 후 장바구니 다시 로드
+  } catch (err) {
+    console.error('수량 증가 실패:', err)
+    alert('수량 변경에 실패했습니다.')
+  }
 }
 
-// 수량 감소 (API 연동 필요)
+// 수량 감소
 const decreaseQuantity = async (item: CartItem) => {
-  // TODO: 수량 업데이트 API 호출
-  console.log('수량 감소:', item.cartItemId)
+  try {
+    console.log('수량 감소:', item.cartItemId, '현재 수량:', item.quantity)
+    
+    if (item.quantity <= 1) {
+      // 수량이 1 이하이면 아이템 삭제
+      await removeItem(item.cartItemId)
+    } else {
+      // 수량 감소
+      await updateCartItem(item.cartItemId, { quantity: item.quantity - 1 })
+      await loadCart() // 업데이트 후 장바구니 다시 로드
+    }
+  } catch (err) {
+    console.error('수량 감소 실패:', err)
+    alert('수량 변경에 실패했습니다.')
+  }
 }
 
 // 아이템 삭제
@@ -87,8 +106,25 @@ const proceedToOrder = () => {
 
 // 계산된 값들
 const cartItems = computed(() => cartData.value?.items || [])
-const storeInfo = computed(() => cartData.value?.store)
-const orderSummary = computed(() => cartData.value?.orderSummary)
+const storeInfo = computed(() => cartData.value ? {
+  name: cartData.value.storeName,
+  deliveryFee: cartData.value.deliveryFee,
+  minOrderAmount: cartData.value.minOrderAmount
+} : null)
+const orderSummary = computed(() => {
+  if (!cartData.value) return null
+  
+  const shortage = Math.max(0, cartData.value.minOrderAmount - cartData.value.totalPrice)
+  const canOrder = cartData.value.totalPrice >= cartData.value.minOrderAmount
+  
+  return {
+    subtotal: cartData.value.totalPrice,
+    deliveryFee: cartData.value.deliveryFee,
+    total: cartData.value.finalPrice,
+    canOrder: canOrder,
+    minOrderAmountShortage: shortage
+  }
+})
 const isEmpty = computed(() => cartData.value?.isEmpty ?? true)
 
 // 가격 포맷팅
