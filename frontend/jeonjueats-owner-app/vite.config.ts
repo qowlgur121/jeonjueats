@@ -7,6 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/owner/',
   plugins: [
     vue(),
     vueDevTools(),
@@ -38,32 +39,32 @@ export default defineConfig({
         theme_color: '#00D0FF',
         background_color: '#ffffff',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: '/owner/',
+        scope: '/owner/',
         orientation: 'portrait',
         lang: 'ko',
         categories: ['business', 'productivity'],
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/owner/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/owner/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/pwa-192x192.png',
+            src: '/owner/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'maskable'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/owner/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
