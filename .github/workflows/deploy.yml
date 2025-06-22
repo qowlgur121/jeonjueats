@@ -112,6 +112,80 @@ jobs:
             echo "uploads 디렉토리 복사 완료"
           fi
           
+          # nginx 설정 디렉토리 초기화 및 파일 생성
+          rm -rf nginx
+          mkdir -p nginx
+          cat > nginx/nginx.conf << 'NGINX_EOF'
+          events {
+              worker_connections 1024;
+          }
+
+          http {
+              include /etc/nginx/mime.types;
+              default_type application/octet-stream;
+
+              # 업스트림 정의
+              upstream backend {
+                  server backend:8080;
+              }
+
+              upstream frontend-user {
+                  server frontend-user:80;
+              }
+
+              upstream frontend-owner {
+                  server frontend-owner:80;
+              }
+
+              server {
+                  listen 80;
+                  server_name jeonjueats.me www.jeonjueats.me localhost;
+
+                  # Enable gzip compression
+                  gzip on;
+                  gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+                  # TWA Digital Asset Links proxy to backend
+                  location /.well-known/ {
+                      proxy_pass http://backend/.well-known/;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+
+                  # API 프록시 (백엔드로 전달)
+                  location /api/ {
+                      proxy_pass http://backend/api/;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+
+                  # 사장님 앱 (/owner 경로)
+                  location /owner {
+                      # /owner를 제거하고 프론트엔드로 전달
+                      rewrite ^/owner/?(.*) /$1 break;
+                      proxy_pass http://frontend-owner;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+
+                  # 유저 앱 (루트 경로 및 나머지 모든 경로)
+                  location / {
+                      proxy_pass http://frontend-user;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+              }
+          }
+          NGINX_EOF
+          
           # 기존 컨테이너 정리
           sudo docker compose -f docker-compose.prod.yml down || true
           
@@ -164,8 +238,8 @@ jobs:
             frontend-user:
               image: ${DOCKER_USERNAME}/jeonjueats-user:latest
               container_name: jeonjueats-user-prod
-              ports:
-                - "80:80"
+              expose:
+                - "80"
               restart: unless-stopped
               networks:
                 - jeonjueats-network
@@ -173,8 +247,23 @@ jobs:
             frontend-owner:
               image: ${DOCKER_USERNAME}/jeonjueats-owner:latest
               container_name: jeonjueats-owner-prod
+              expose:
+                - "80"
+              restart: unless-stopped
+              networks:
+                - jeonjueats-network
+
+            nginx:
+              image: nginx:alpine
+              container_name: jeonjueats-nginx-prod
               ports:
-                - "81:80"
+                - "80:80"
+              volumes:
+                - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+              depends_on:
+                - backend
+                - frontend-user
+                - frontend-owner
               restart: unless-stopped
               networks:
                 - jeonjueats-network
@@ -254,9 +343,9 @@ jobs:
       run: |
         if [ ${{ job.status }} == 'success' ]; then
           echo " 배포가 성공적으로 완료되었습니다!"
-          echo "- 유저 앱: http://${{ secrets.EC2_HOST }}"
-          echo "- 사장님 앱: http://${{ secrets.EC2_HOST }}:81"
-          echo "- 백엔드 API: http://${{ secrets.EC2_HOST }}:8080"
+          echo "- 유저 앱: https://jeonjueats.me/"
+          echo "- 사장님 앱: https://jeonjueats.me/owner"
+          echo "- 백엔드 API: https://jeonjueats.me/api"
         else
           echo " 배포에 실패했습니다."
         fi
