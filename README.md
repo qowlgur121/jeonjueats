@@ -42,7 +42,6 @@
 - **API 문서**: https://jeonjueats.me/swagger-ui/index.html
 - **Android 앱**: https://drive.google.com/file/d/1I3SoxbWQLEiibWzFm954TBqQ2SuTxlq2/view?usp=drive_link
 
- 
 
 ## 시스템 아키텍처
 
@@ -50,23 +49,12 @@
   <img src="https://github.com/user-attachments/assets/504f08e4-c1ee-4fe6-a912-b93829447be1" width="1000" alt="시스템 아키텍처">
 </div>
 
-### Nginx 통합 라우터 구조
 
-현재 시스템은 Nginx를 중앙 라우터로 사용하여 단일 도메인에서 모든 서비스를 제공합니다
+## 데이터베이스 설계 (ERD)
 
-```
-https://jeonjueats.me/
-├── / (고객용 앱 - Vue.js PWA)
-├── /owner (사장님 앱 - Vue.js PWA)
-├── /api (백엔드 API - Spring Boot)
-└── nginx (통합 라우터 및 프록시)
-```
-
-**장점:**
-- 단일 HTTPS 인증서로 모든 서비스 보안 연결
-- CORS 문제 완전 해결
-- PWA 매니페스트 정상 작동
-- 배포 및 관리 단순화
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/80046381-de07-4420-b975-6a8947955492" width="700" alt="데이터베이스 ERD">
+</div>
 
 ### 주요 기술 스택
 
@@ -105,12 +93,6 @@ https://jeonjueats.me/
 - **VitePWA**
 - **PWA Manifest**
 - **Bubblewrap CLI**
-
-## 데이터베이스 설계 (ERD)
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/80046381-de07-4420-b975-6a8947955492" width="700" alt="데이터베이스 ERD">
-</div>
 
 ## API 문서
 
@@ -161,7 +143,7 @@ Swagger: [https://jeonjueats.me/swagger-ui/index.html](https://jeonjueats.me/swa
 ### CI/CD 파이프라인
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/63f62f31-cb6c-4318-95ad-b19f7ba1840f" width="900" alt="CI/CD 파이프라인">
+  <img src="https://github.com/user-attachments/assets/25f6930e-f464-4bc0-b517-32b64f12db08" width="900" alt="CI/CD 파이프라인">
 </div>
 
 1. **GitHub Actions**: 소스 코드 체크아웃 및 Docker 이미지 빌드
