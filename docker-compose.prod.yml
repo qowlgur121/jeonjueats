@@ -34,7 +34,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: dev
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-jeonjueats}
