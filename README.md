@@ -1,6 +1,35 @@
 # 전주이츠 (JeonjuEats)
 
-전주 지역 음식 배달 중개 플랫폼
+> **전주 지역 음식 배달 중개 플랫폼**
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Vue.js-3.0-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.5.0-6DB33F?style=for-the-badge&logo=spring&logoColor=white" />
+  <img src="https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vite-4.0-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pinia-2.0-F7DF1E?style=for-the-badge&logo=pinia&logoColor=black" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Docker-24.0.2-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Nginx-Alpine-009639?style=for-the-badge&logo=nginx&logoColor=white" />
+  <img src="https://img.shields.io/badge/AWS_EC2-Ubuntu-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" />
+  <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" />
+  <img src="https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" />
+</p>
+
 
 ## 프로젝트 개요
 
@@ -121,6 +150,30 @@ Swagger: [https://jeonjueats.me/swagger-ui/index.html](https://jeonjueats.me/swa
 - Role 기반 접근 제어 (ROLE_USER, ROLE_OWNER)
 - Spring Security 필터 체인 통합
 
+## 배포 환경
+
+### AWS EC2 인프라
+- **인스턴스**: t2.micro (Ubuntu 24.04 LTS)
+- **IP**: 3.35.145.18
+- **도메인**: jeonjueats.me (Cloudflare DNS)
+- **HTTPS**: Cloudflare SSL 인증서
+
+### CI/CD 파이프라인
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/63f62f31-cb6c-4318-95ad-b19f7ba1840f" width="900" alt="CI/CD 파이프라인">
+</div>
+
+1. **GitHub Actions**: 소스 코드 체크아웃 및 Docker 이미지 빌드
+2. **Docker Hub**: 자동 이미지 푸시 
+3. **EC2 배포**: SSH 접속 → 이미지 Pull → 컨테이너 재시작
+
+### 컨테이너 구성
+- **jeonjueats-backend**: Spring Boot API 서버
+- **jeonjueats-user**: Vue.js 고객용 앱
+- **jeonjueats-owner**: Vue.js 사장님 앱
+- **jeonjueats-db**: MySQL 8.0 데이터베이스
+
 ## 로컬 개발 환경
 
 ### 필수 요구사항
@@ -164,31 +217,6 @@ npm run dev
 - 100여 개 메뉴
 - 5명 일반 사용자 + 7명 사장님 계정
 ```
-
-## 배포 환경
-
-### AWS EC2 인프라
-- **인스턴스**: t2.micro (Ubuntu 24.04 LTS)
-- **IP**: 3.35.145.18
-- **도메인**: jeonjueats.me (Cloudflare DNS)
-- **HTTPS**: Cloudflare SSL 인증서
-
-### CI/CD 파이프라인
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/63f62f31-cb6c-4318-95ad-b19f7ba1840f" width="900" alt="CI/CD 파이프라인">
-</div>
-
-1. **GitHub Actions**: 소스 코드 체크아웃 및 Docker 이미지 빌드
-2. **Docker Hub**: 자동 이미지 푸시 
-3. **EC2 배포**: SSH 접속 → 이미지 Pull → 컨테이너 재시작
-
-### 컨테이너 구성
-- **jeonjueats-backend**: Spring Boot API 서버
-- **jeonjueats-user**: Vue.js 고객용 앱
-- **jeonjueats-owner**: Vue.js 사장님 앱
-- **jeonjueats-db**: MySQL 8.0 데이터베이스
-
 
 ## 기술적 의사결정
 
