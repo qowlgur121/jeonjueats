@@ -16,12 +16,10 @@ import java.util.Date;
 /**
  * JWT(JSON Web Token) 토큰 생성, 검증, 파싱을 담당하는 유틸리티 클래스
  * 
- * 📌 주요 역할:
  * - Access Token 생성 (로그인 성공 시)
  * - 토큰에서 사용자 정보 추출 (인증 필터에서 사용)
  * - 토큰 유효성 검증 (만료, 변조 확인)
  * 
- * 📋 PRD 참조: 5.2.2.2 이메일 로그인 API 명세
  * - 로그인 성공 시 accessToken 발급
  * - Bearer Token 방식으로 인증 헤더 사용
  */
@@ -45,14 +43,13 @@ public class JwtUtil {
     private long expirationTime;
     
     /**
-     * 🔐 JWT Access Token 생성
+     * JWT Access Token 생성
      * 
      * @param userId 사용자 ID (Primary Key)
      * @param email 사용자 이메일 (로그인 ID)
      * @param role 사용자 역할 (ROLE_USER 또는 ROLE_OWNER)
      * @return 생성된 JWT 토큰 문자열
      * 
-     * 📋 토큰 구조 (Payload):
      * - sub: 사용자 이메일 (Subject)
      * - userId: 사용자 ID 
      * - role: 사용자 권한
@@ -74,7 +71,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔍 JWT 토큰에서 사용자 이메일 추출
+     * JWT 토큰에서 사용자 이메일 추출
      * 
      * @param token JWT 토큰 문자열
      * @return 토큰에 저장된 사용자 이메일
@@ -85,7 +82,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔍 JWT 토큰에서 사용자 ID 추출
+     * JWT 토큰에서 사용자 ID 추출
      * 
      * @param token JWT 토큰 문자열
      * @return 토큰에 저장된 사용자 ID
@@ -96,7 +93,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔍 JWT 토큰에서 사용자 권한 추출
+     * JWT 토큰에서 사용자 권한 추출
      * 
      * @param token JWT 토큰 문자열
      * @return 토큰에 저장된 사용자 권한 (ROLE_USER, ROLE_OWNER)
@@ -107,12 +104,12 @@ public class JwtUtil {
     }
     
     /**
-     * ✅ JWT 토큰 유효성 검증
+     * JWT 토큰 유효성 검증
      * 
      * @param token JWT 토큰 문자열
      * @return 토큰이 유효하면 true, 그렇지 않으면 false
      * 
-     * 📋 검증 내용:
+     * 검증 내용:
      * - 토큰 형식 유효성
      * - 서명 검증 (변조 확인)
      * - 만료 시간 확인
@@ -136,7 +133,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔓 JWT 토큰에서 Claims 정보 추출 (내부 메서드)
+     * JWT 토큰에서 Claims 정보 추출 (내부 메서드)
      * 
      * @param token JWT 토큰 문자열
      * @return JWT Claims 객체
@@ -151,7 +148,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔑 JWT 서명/검증용 비밀키 생성 (내부 메서드)
+     * JWT 서명/검증용 비밀키 생성 (내부 메서드)
      * 
      * @return HMAC-SHA 알고리즘용 SecretKey 객체
      */
@@ -160,7 +157,7 @@ public class JwtUtil {
     }
     
     /**
-     * 🔍 HTTP 요청 헤더에서 JWT 토큰 추출
+     * HTTP 요청 헤더에서 JWT 토큰 추출
      * "Bearer [TOKEN]" 형식에서 [TOKEN] 부분만 추출
      * 
      * @param request HTTP 서블릿 요청 객체
