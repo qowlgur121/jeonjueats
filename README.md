@@ -170,9 +170,9 @@ docker compose up -d
 ```
 
 ### 접속 주소
-- 고객용 앱: http://localhost 
-- 사장님 앱: http://localhost/owner 
-- API 문서: http://localhost/swagger-ui/index.html
+- 고객용 앱: http://localhost:3000
+- 사장님 앱: http://localhost:3001
+- API 문서: http://localhost:8080/swagger-ui/index.html
 
 ### 개별 개발 모드
 ```bash
