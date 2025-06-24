@@ -33,12 +33,16 @@
 
 ## 프로젝트 개요
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/77d7618f-40ce-4889-a487-a9b44df2cde8" width="1000" alt="시스템 아키텍처">
+</div>
+
 전주이츠는 전주 지역의 소상공인과 고객을 연결하는 배달 중개 서비스입니다. 
 
 ## 서비스 URL
 
-- **고객용 앱**: https://jeonjueats.me 
-- **사장님 앱**: https://jeonjueats.me/owner 
+- **고객용 접속 주소**: https://jeonjueats.me 
+- **사장님 접속 앱**: https://jeonjueats.me/owner 
 - **API 문서**: https://jeonjueats.me/swagger-ui/index.html
 - **Android 앱**: https://drive.google.com/file/d/1I3SoxbWQLEiibWzFm954TBqQ2SuTxlq2/view?usp=drive_link
 
@@ -170,9 +174,9 @@ docker compose up -d
 ```
 
 ### 접속 주소
-- 고객용 앱: http://localhost 
-- 사장님 앱: http://localhost/owner 
-- API 문서: http://localhost/swagger-ui/index.html
+- 고객용 앱: http://localhost:3000
+- 사장님 앱: http://localhost:3001
+- API 문서: http://localhost:8080/swagger-ui/index.html
 
 ### 개별 개발 모드
 ```bash
