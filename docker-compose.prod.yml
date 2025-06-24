@@ -34,7 +34,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: dev
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-jeonjueats}
@@ -52,7 +52,7 @@ services:
     image: ${DOCKER_USERNAME}/jeonjueats-user:latest
     container_name: jeonjueats-frontend-user-prod
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
     networks:
@@ -64,9 +64,25 @@ services:
     image: ${DOCKER_USERNAME}/jeonjueats-owner:latest
     container_name: jeonjueats-frontend-owner-prod
     ports:
-      - "81:80"
+      - "3001:80"
     depends_on:
       - backend
+    networks:
+      - jeonjueats-network
+    restart: unless-stopped
+
+  # Nginx 리버스 프록시
+  nginx:
+    image: nginx:alpine
+    container_name: jeonjueats-nginx-prod
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend-user
+      - frontend-owner
     networks:
       - jeonjueats-network
     restart: unless-stopped

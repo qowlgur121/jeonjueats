@@ -112,79 +112,21 @@ jobs:
             echo "uploads 디렉토리 복사 완료"
           fi
           
-          # nginx 설정 디렉토리 초기화 및 파일 생성
+          # Git 저장소에서 nginx 설정 파일 가져오기
+          echo "Git 저장소에서 nginx 설정 파일을 가져오는 중..."
+          if [ ! -d "temp_repo" ]; then
+            git clone --depth 1 https://github.com/${{ github.repository }}.git temp_repo
+          fi
+          
+          # nginx 디렉토리 초기화 및 Git에서 복사
           rm -rf nginx
           mkdir -p nginx
-          cat > nginx/nginx.conf << 'NGINX_EOF'
-          events {
-              worker_connections 1024;
-          }
-
-          http {
-              include /etc/nginx/mime.types;
-              default_type application/octet-stream;
-
-              # 업스트림 정의
-              upstream backend {
-                  server backend:8080;
-              }
-
-              upstream frontend-user {
-                  server frontend-user:80;
-              }
-
-              upstream frontend-owner {
-                  server frontend-owner:80;
-              }
-
-              server {
-                  listen 80;
-                  server_name jeonjueats.me www.jeonjueats.me localhost;
-
-                  # Enable gzip compression
-                  gzip on;
-                  gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-                  # TWA Digital Asset Links proxy to backend
-                  location /.well-known/ {
-                      proxy_pass http://backend/.well-known/;
-                      proxy_set_header Host $host;
-                      proxy_set_header X-Real-IP $remote_addr;
-                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                      proxy_set_header X-Forwarded-Proto $scheme;
-                  }
-
-                  # API 프록시 (백엔드로 전달)
-                  location /api/ {
-                      proxy_pass http://backend/api/;
-                      proxy_set_header Host $host;
-                      proxy_set_header X-Real-IP $remote_addr;
-                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                      proxy_set_header X-Forwarded-Proto $scheme;
-                  }
-
-                  # 사장님 앱 (/owner 경로)
-                  location /owner {
-                      # /owner를 제거하고 프론트엔드로 전달
-                      rewrite ^/owner/?(.*) /$1 break;
-                      proxy_pass http://frontend-owner;
-                      proxy_set_header Host $host;
-                      proxy_set_header X-Real-IP $remote_addr;
-                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                      proxy_set_header X-Forwarded-Proto $scheme;
-                  }
-
-                  # 유저 앱 (루트 경로 및 나머지 모든 경로)
-                  location / {
-                      proxy_pass http://frontend-user;
-                      proxy_set_header Host $host;
-                      proxy_set_header X-Real-IP $remote_addr;
-                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                      proxy_set_header X-Forwarded-Proto $scheme;
-                  }
-              }
-          }
-          NGINX_EOF
+          cp temp_repo/nginx/nginx.conf nginx/nginx.conf
+          
+          # 임시 저장소 정리
+          rm -rf temp_repo
+          
+          echo "nginx.conf 파일이 Git 저장소에서 성공적으로 복사되었습니다."
           
           # 기존 컨테이너 정리
           sudo docker compose -f docker-compose.prod.yml down || true
