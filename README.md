@@ -42,7 +42,7 @@
 ## 서비스 URL
 
 - **고객용 접속 주소**: https://jeonjueats.me 
-- **사장님 접속 앱**: https://jeonjueats.me/owner 
+- **사장님 접속 주소**: https://jeonjueats.me/owner 
 - **API 문서**: https://jeonjueats.me/swagger-ui/index.html
 - **Android 앱**: https://drive.google.com/file/d/1I3SoxbWQLEiibWzFm954TBqQ2SuTxlq2/view?usp=drive_link
 
